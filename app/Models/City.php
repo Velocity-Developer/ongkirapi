@@ -4,12 +4,15 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 
-class Province extends Model
+class City extends Model
 {
     protected $fillable = [
+        'city_id',
+        'type',
+        'city_name',
+        'postal_code',
         'province_id',
         'province',
-        'code',
     ];
 
     //hidden
@@ -18,9 +21,9 @@ class Province extends Model
         'updated_at',
     ];
 
-    //relasi ke city
-    public function city()
+    //relasi ke province
+    public function province()
     {
-        return $this->hasMany(City::class);
+        return $this->belongsTo(Province::class);
     }
 }
