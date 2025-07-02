@@ -23,4 +23,10 @@ class Province extends Model
     {
         return $this->hasMany(City::class);
     }
+
+    //relasi ke subdistrict
+    public function subdistrict()
+    {
+        return $this->hasMany(Subdistrict::class);
+    }
 }
