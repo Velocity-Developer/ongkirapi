@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
+use App\Models\Province;
 
 class ProvinceController extends Controller
 {
@@ -11,7 +12,10 @@ class ProvinceController extends Controller
      */
     public function index()
     {
-        //
+        //get all provinces
+        $data = Province::all();
+
+        return response()->json($data);
     }
 
     /**

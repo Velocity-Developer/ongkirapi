@@ -11,4 +11,10 @@ class Province extends Model
         'province',
         'code',
     ];
+
+    //hidden
+    protected $hidden = [
+        'created_at',
+        'updated_at',
+    ];
 }

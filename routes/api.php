@@ -8,5 +8,5 @@ use App\Http\Controllers\ProvinceController;
 Route::middleware(['auth:sanctum'])->group(function () {});
 
 Route::apiResources([
-    'province'      => ProvinceController::class,
+    'v1/province'      => ProvinceController::class,
 ]);
