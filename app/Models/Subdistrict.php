@@ -8,10 +8,10 @@ class Subdistrict extends Model
 {
     protected $fillable = [
         'subdistrict_id',
+        'subdistrict_name',
         'city_id',
         'type',
         'city',
-        'subdistrict_name',
         'province_id',
         'province',
     ];
