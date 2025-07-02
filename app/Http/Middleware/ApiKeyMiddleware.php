@@ -10,9 +10,9 @@ class ApiKeyMiddleware
   public function handle(Request $request, Closure $next)
   {
     $apiKey = env('API_KEY');
-    $authHeader = $request->header('Authorization');
+    $authHeader = $request->header('key');
 
-    if (!$authHeader || $authHeader !== 'Bearer ' . $apiKey) {
+    if (!$authHeader || $authHeader !== $apiKey) {
       return response()->json(['message' => 'Unauthorized'], 401);
     }
 
