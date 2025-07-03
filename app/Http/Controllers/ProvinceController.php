@@ -25,8 +25,8 @@ class ProvinceController extends Controller
         $result['rajaongkir'] = [
             'query' => $request->all(),
             'status' => [
-                'code' => 200,
-                'description' => 'OK'
+                'code' => $data && count($data) > 0 ? 200 : 400,
+                'description' => $data && count($data) > 0 ? 'OK' : 'Invalid key.',
             ],
             'results' => $data
         ];

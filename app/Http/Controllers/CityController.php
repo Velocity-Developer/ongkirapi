@@ -10,12 +10,33 @@ class CityController extends Controller
     /**
      * Display a listing of the resource.
      */
-    public function index()
+    public function index(Request $request)
     {
-        //get all cities
-        $data = City::all();
+        //get cities
+        $query = City::select('city_id', 'city_name', 'province_id', 'province', 'type', 'postal_code');
 
-        return response()->json($data);
+        //jika ada request id
+        if ($request->id) {
+            $query->where('city_id', $request->id);
+        }
+
+        //jika ada request province_id
+        if ($request->province) {
+            $query->where('province_id', $request->province);
+        }
+
+        $data = $query->get();
+
+        $result['rajaongkir'] = [
+            'query' => $request->all(),
+            'status' => [
+                'code' => $data && count($data) > 0 ? 200 : 400,
+                'description' => $data && count($data) > 0 ? 'OK' : 'Invalid key.',
+            ],
+            'results' => $data
+        ];
+
+        return response()->json($result);
     }
 
     /**
