@@ -10,12 +10,28 @@ class ProvinceController extends Controller
     /**
      * Display a listing of the resource.
      */
-    public function index()
+    public function index(Request $request)
     {
         //get all provinces
-        $data = Province::all();
+        $query = Province::select('province_id', 'province');
 
-        return response()->json($data);
+        //jika ada request id
+        if ($request->id) {
+            $query->where('province_id', $request->id);
+        }
+
+        $data = $query->get();
+
+        $result['rajaongkir'] = [
+            'query' => $request->all(),
+            'status' => [
+                'code' => 200,
+                'description' => 'OK'
+            ],
+            'results' => $data
+        ];
+
+        return response()->json($result);
     }
 
     /**
