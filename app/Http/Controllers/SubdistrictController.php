@@ -10,12 +10,33 @@ class SubdistrictController extends Controller
     /**
      * Display a listing of the resource.
      */
-    public function index()
+    public function index(Request $request)
     {
         //get all subdistricts
-        $data = Subdistrict::all();
+        $query = Subdistrict::select('subdistrict_id', 'subdistrict_name', 'city_id', 'city', 'province_id', 'province', 'type');
 
-        return response()->json($data);
+        //jika ada request id
+        if ($request->id) {
+            $query->where('subdistrict_id', $request->id);
+        }
+
+        //jika ada request city
+        if ($request->city) {
+            $query->where('city_id', $request->city);
+        }
+
+        $data = $query->get();
+
+        $result['rajaongkir'] = [
+            'query' => $request->all(),
+            'status' => [
+                'code' => $data && count($data) > 0 ? 200 : 400,
+                'description' => $data && count($data) > 0 ? 'OK' : 'Invalid key.',
+            ],
+            'results' => $data
+        ];
+
+        return response()->json($result);
     }
 
     /**
