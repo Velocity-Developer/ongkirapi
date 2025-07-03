@@ -67,12 +67,27 @@ class CostController extends Controller
             $shippingResult = json_decode($shippingResult['data'], true);
         }
 
-        foreach ($shippingResult['data'] as $key => $value) {
-            $shippingResult['data'][$value['code']]['code'] = $value['code'];
-            $shippingResult['data'][$value['code']]['name'] = $value['name'];
-            $shippingResult['data'][$value['code']]['costs'] = $value;
-            unset($shippingResult['data'][$key]);
+        $results = [];
+        foreach ($shippingResult['data'] as $courierData) {
+            $results[] = [
+                'code' => $courierData['code'],
+                'name' => $courierData['name'],
+                'costs' => [
+                    [
+                        'service' => $courierData['service'],
+                        'description' => $courierData['description'],
+                        'cost' => [
+                            [
+                                'value' => $courierData['cost'],
+                                'etd' => $courierData['etd'] ?? '',
+                                'note' => ''
+                            ]
+                        ]
+                    ]
+                ]
+            ];
         }
+
 
         $result['rajaongkir'] = [
             'query'                 => $request->all(),
@@ -82,7 +97,7 @@ class CostController extends Controller
                 'code'          => $status_code,
                 'description'   => $status_description,
             ],
-            'results'               => $shippingResult
+            'results'               => $results
         ];
 
         return response()->json($result);
