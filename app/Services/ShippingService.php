@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Models\Cost;
 use Illuminate\Support\Facades\Http;
 
 class ShippingService
@@ -17,6 +18,25 @@ class ShippingService
 
   public function getCost(array $payload)
   {
+    // 1. Cek apakah data sudah ada di database
+    $existing = Cost::where([
+      'origin' => $payload['origin'],
+      'origin_type' => $payload['originType'] ?? 'subdistrict',
+      'destination' => $payload['destination'],
+      'destination_type' => $payload['destinationType'] ?? 'subdistrict',
+      'courier' => $payload['courier'],
+      'weight' => $payload['weight'],
+    ])->first();
+
+    if ($existing) {
+      return [
+        'error' => false,
+        'status' => 200,
+        'data' => json_encode($existing->result), // kembalikan sebagai string seperti API
+      ];
+    }
+
+    // 2. Ambil dari API jika tidak ada
     $response = Http::asForm()->withHeaders([
       'key' => $this->apiKey,
     ])->post("{$this->endpoint}/calculate/domestic-cost", [
@@ -28,14 +48,27 @@ class ShippingService
       'width'         => $payload['width'] ?? null,
       'height'        => $payload['height'] ?? null,
       'diameter'      => $payload['diameter'] ?? null,
-      'price'         => $payload['price'] ?? 'lowest', // tambahan jika kamu ingin sorting
+      'price'         => $payload['price'] ?? 'lowest',
     ]);
 
     if ($response->successful()) {
+      $decoded = $response->json();
+
+      // 3. Simpan ke DB
+      Cost::create([
+        'origin' => $payload['origin'],
+        'origin_type' => $payload['originType'] ?? 'subdistrict',
+        'destination' => $payload['destination'],
+        'destination_type' => $payload['destinationType'] ?? 'subdistrict',
+        'courier' => $payload['courier'],
+        'weight' => $payload['weight'],
+        'result' => $decoded['data'] ?? [],
+      ]);
+
       return [
         'error' => false,
-        'status' => $response->status(),
-        'data' => $response->body(),
+        'status' => 200,
+        'data' => json_encode($decoded['data'] ?? []),
       ];
     }
 

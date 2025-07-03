@@ -68,7 +68,7 @@ class CostController extends Controller
         }
 
         $results = [];
-        foreach ($shippingResult['data'] as $courierData) {
+        foreach ($shippingResult as $courierData) {
             $results[] = [
                 'code' => $courierData['code'],
                 'name' => $courierData['name'],
