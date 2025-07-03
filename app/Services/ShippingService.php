@@ -17,21 +17,26 @@ class ShippingService
 
   public function getCost(array $payload)
   {
-    $response = Http::withHeaders([
-      'key' => $this->apiKey
-    ])->post("{$this->endpoint}", [
-      'origin'        => $payload['origin'],
-      'destination'   => $payload['destination'],
-      'weight'        => $payload['weight'],
+    $response = Http::asForm()->withHeaders([
+      'key' => $this->apiKey,
+    ])->post("{$this->endpoint}/calculate/domestic-cost", [
+      'origin'        => (int) $payload['origin'],
+      'destination'   => (int) $payload['destination'],
+      'weight'        => (int) $payload['weight'],
       'courier'       => $payload['courier'],
       'length'        => $payload['length'] ?? null,
       'width'         => $payload['width'] ?? null,
       'height'        => $payload['height'] ?? null,
       'diameter'      => $payload['diameter'] ?? null,
+      'price'         => $payload['price'] ?? 'lowest', // tambahan jika kamu ingin sorting
     ]);
 
     if ($response->successful()) {
-      return $response->json();
+      return [
+        'error' => false,
+        'status' => $response->status(),
+        'data' => $response->body(),
+      ];
     }
 
     return [

@@ -57,12 +57,22 @@ class CostController extends Controller
         }
 
         $shippingResult = $this->shipping->getCost([
-            'origin'        => $request->origin,
-            'destination'   => $request->destination,
+            'origin'        => $origin_details['postal_code'],
+            'destination'   => $destination_details['postal_code'],
             'weight'        => $request->weight,
             'courier'       => $request->courier,
         ]);
 
+        if ($shippingResult['status'] == 200) {
+            $shippingResult = json_decode($shippingResult['data'], true);
+        }
+
+        foreach ($shippingResult['data'] as $key => $value) {
+            $shippingResult['data'][$value['code']]['code'] = $value['code'];
+            $shippingResult['data'][$value['code']]['name'] = $value['name'];
+            $shippingResult['data'][$value['code']]['costs'] = $value;
+            unset($shippingResult['data'][$key]);
+        }
 
         $result['rajaongkir'] = [
             'query'                 => $request->all(),
