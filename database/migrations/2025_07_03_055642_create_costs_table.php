@@ -16,7 +16,6 @@ return new class extends Migration
             $table->string('origin');
             $table->string('destination');
             $table->unsignedInteger('weight');
-            $table->json('service')->nullable();
             $table->timestamps();
         });
     }

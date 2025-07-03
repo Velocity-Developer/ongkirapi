@@ -23,7 +23,6 @@ class ShippingService
     $existing = Cost::with('cost_services')->where([
       'origin' => $payload['origin'],
       'destination' => $payload['destination'],
-      'service' => $payload['courier'],
       'weight' => $payload['weight'],
     ])->first();
 
@@ -62,15 +61,14 @@ class ShippingService
     $services = $decoded['data'] ?? [];
 
     // 3. Simpan ke tabel costs
-    $cost = Cost::create([
-      'origin' => $payload['origin'],
-      'destination' => $payload['destination'],
-      'service' => $payload['courier'],
-      'weight' => $payload['weight']
-    ]);
-
-    // 4. Simpan ke tabel cost_services
     foreach ($services as $service) {
+      $cost = Cost::create([
+        'origin'      => $payload['origin'],
+        'destination' => $payload['destination'],
+        'weight'      => $payload['weight'],
+      ]);
+
+      // 4. Simpan ke tabel cost_services
       CostService::create([
         'cost_id'     => $cost->id,
         'name'        => $service['name'],
