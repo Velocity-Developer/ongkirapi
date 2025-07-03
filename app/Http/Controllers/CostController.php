@@ -7,9 +7,17 @@ use Illuminate\Support\Facades\Validator;
 
 use App\Models\City;
 use App\Models\Subdistrict;
+use App\Services\ShippingService;
 
 class CostController extends Controller
 {
+    protected ShippingService $shipping;
+
+    public function __construct(ShippingService $shipping)
+    {
+        $this->shipping = $shipping;
+    }
+
     public function index(Request $request)
     {
 
@@ -48,6 +56,9 @@ class CostController extends Controller
             $destination_details = Subdistrict::where('subdistrict_id', $request->destination)->first();
         }
 
+        $shippingResult = $this->shipping->getCost($request->all());
+
+
         $result['rajaongkir'] = [
             'query'                 => $request->all(),
             'origin_details'        => $origin_details,
@@ -56,7 +67,7 @@ class CostController extends Controller
                 'code'          => $status_code,
                 'description'   => $status_description,
             ],
-            'results'               => []
+            'results'               => $shippingResult['rajaongkir']['results'] ?? []
         ];
 
         return response()->json($result);
