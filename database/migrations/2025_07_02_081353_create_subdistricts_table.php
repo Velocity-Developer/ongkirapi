@@ -20,6 +20,7 @@ return new class extends Migration
             $table->string('type')->nullable();
             $table->string('city')->nullable();
             $table->string('subdistrict_name');
+            $table->string('postal_code')->nullable();
             $table->timestamps();
         });
     }

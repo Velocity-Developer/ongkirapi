@@ -56,7 +56,12 @@ class CostController extends Controller
             $destination_details = Subdistrict::where('subdistrict_id', $request->destination)->first();
         }
 
-        $shippingResult = $this->shipping->getCost($request->all());
+        $shippingResult = $this->shipping->getCost([
+            'origin'        => $request->origin,
+            'destination'   => $request->destination,
+            'weight'        => $request->weight,
+            'courier'       => $request->courier,
+        ]);
 
 
         $result['rajaongkir'] = [
@@ -67,7 +72,7 @@ class CostController extends Controller
                 'code'          => $status_code,
                 'description'   => $status_description,
             ],
-            'results'               => $shippingResult['rajaongkir']['results'] ?? []
+            'results'               => $shippingResult
         ];
 
         return response()->json($result);

@@ -19,11 +19,9 @@ class ShippingService
   {
     $response = Http::withHeaders([
       'key' => $this->apiKey
-    ])->post("{$this->endpoint}/cost", [
+    ])->post("{$this->endpoint}", [
       'origin'        => $payload['origin'],
-      'originType'    => $payload['originType'],
       'destination'   => $payload['destination'],
-      'destinationType' => $payload['destinationType'],
       'weight'        => $payload['weight'],
       'courier'       => $payload['courier'],
       'length'        => $payload['length'] ?? null,

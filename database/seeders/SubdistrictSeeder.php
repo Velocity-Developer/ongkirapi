@@ -27,6 +27,7 @@ class SubdistrictSeeder extends Seeder
                 Subdistrict::updateOrCreate([
                     'subdistrict_id'    => $result['subdistrict_id'],
                     'subdistrict_name'  => $result['subdistrict_name'],
+                    'postal_code'       => $result['postal_code']
                 ], [
                     'city_id'           => $result['city_id'],
                     'city'              => $result['city'],
