@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use App\Models\Cost;
+use App\Models\CostService;
 use Illuminate\Support\Facades\Http;
 
 class ShippingService
@@ -19,12 +20,10 @@ class ShippingService
   public function getCost(array $payload)
   {
     // 1. Cek apakah data sudah ada di database
-    $existing = Cost::where([
+    $existing = Cost::with('cost_services')->where([
       'origin' => $payload['origin'],
-      'origin_type' => $payload['originType'] ?? 'subdistrict',
       'destination' => $payload['destination'],
-      'destination_type' => $payload['destinationType'] ?? 'subdistrict',
-      'courier' => $payload['courier'],
+      'service' => $payload['courier'],
       'weight' => $payload['weight'],
     ])->first();
 
@@ -32,50 +31,62 @@ class ShippingService
       return [
         'error' => false,
         'status' => 200,
-        'data' => json_encode($existing->result), // kembalikan sebagai string seperti API
+        'data' => $existing->cost_services->toArray(),
       ];
     }
 
-    // 2. Ambil dari API jika tidak ada
+    // 2. Ambil dari API jika belum ada
     $response = Http::asForm()->withHeaders([
       'key' => $this->apiKey,
     ])->post("{$this->endpoint}/calculate/domestic-cost", [
-      'origin'        => (int) $payload['origin'],
-      'destination'   => (int) $payload['destination'],
-      'weight'        => (int) $payload['weight'],
-      'courier'       => $payload['courier'],
-      'length'        => $payload['length'] ?? null,
-      'width'         => $payload['width'] ?? null,
-      'height'        => $payload['height'] ?? null,
-      'diameter'      => $payload['diameter'] ?? null,
-      'price'         => $payload['price'] ?? 'lowest',
+      'origin'      => (int) $payload['origin'],
+      'destination' => (int) $payload['destination'],
+      'weight'      => (int) $payload['weight'],
+      'courier'     => $payload['courier'],
+      'length'      => $payload['length'] ?? null,
+      'width'       => $payload['width'] ?? null,
+      'height'      => $payload['height'] ?? null,
+      'diameter'    => $payload['diameter'] ?? null,
+      'price'       => $payload['price'] ?? 'lowest',
     ]);
 
-    if ($response->successful()) {
-      $decoded = $response->json();
-
-      // 3. Simpan ke DB
-      Cost::create([
-        'origin' => $payload['origin'],
-        'origin_type' => $payload['originType'] ?? 'subdistrict',
-        'destination' => $payload['destination'],
-        'destination_type' => $payload['destinationType'] ?? 'subdistrict',
-        'courier' => $payload['courier'],
-        'weight' => $payload['weight'],
-        'result' => $decoded['data'] ?? [],
-      ]);
-
+    if (!$response->successful()) {
       return [
-        'error' => false,
-        'status' => 200,
-        'data' => json_encode($decoded['data'] ?? []),
+        'error' => true,
+        'status' => $response->status(),
+        'message' => $response->body(),
       ];
     }
 
+    $decoded = $response->json();
+    $services = $decoded['data'] ?? [];
+
+    // 3. Simpan ke tabel costs
+    $cost = Cost::create([
+      'origin' => $payload['origin'],
+      'destination' => $payload['destination'],
+      'service' => $payload['courier'],
+      'weight' => $payload['weight']
+    ]);
+
+    // 4. Simpan ke tabel cost_services
+    foreach ($services as $service) {
+      CostService::create([
+        'cost_id'     => $cost->id,
+        'name'        => $service['name'],
+        'code'        => $service['code'],
+        'service'     => $service['service'],
+        'description' => $service['description'] ?? null,
+        'cost'        => $service['cost'] ?? 0,
+        'etd'         => $service['etd'] ?? null,
+      ]);
+    }
+
     return [
-      'error' => true,
-      'status' => $response->status(),
-      'message' => $response->body(),
+      'error' => false,
+      'status' => 200,
+      'data' => $services,
+      'payload' => $payload
     ];
   }
 }

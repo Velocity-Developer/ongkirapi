@@ -20,16 +20,13 @@ class CostController extends Controller
 
     public function index(Request $request)
     {
-
-        $status_code = 200;
-        $status_description = 'OK';
-
+        // 1. Validasi request
         $validator = Validator::make($request->all(), [
             'origin'            => ['required'],
             'originType'        => ['required', 'in:city,subdistrict'],
             'destination'       => ['required'],
             'destinationType'   => ['required', 'in:city,subdistrict'],
-            'weight'            => ['required'],
+            'weight'            => ['required', 'numeric'],
             'courier'           => ['required'],
             'length'            => ['nullable', 'numeric'],
             'width'             => ['nullable', 'numeric'],
@@ -38,38 +35,68 @@ class CostController extends Controller
         ]);
 
         if ($validator->fails()) {
-            $status_code = 400;
-            $status_description = $validator->errors();
+            return response()->json([
+                'rajaongkir' => [
+                    'query' => $request->all(),
+                    'status' => [
+                        'code' => 400,
+                        'description' => $validator->errors(),
+                    ],
+                ]
+            ], 400);
         }
 
-        $origin_details = [];
-        if ($request->originType == 'city') {
-            $origin_details = City::where('city_id', $request->origin)->first();
-        } else {
-            $origin_details = Subdistrict::where('subdistrict_id', $request->origin)->first();
+        // 2. Ambil detail origin/destination
+        $origin_details = $request->originType === 'city'
+            ? City::where('city_id', $request->origin)->first()
+            : Subdistrict::where('subdistrict_id', $request->origin)->first();
+
+        $destination_details = $request->destinationType === 'city'
+            ? City::where('city_id', $request->destination)->first()
+            : Subdistrict::where('subdistrict_id', $request->destination)->first();
+
+        if (!$origin_details || !$destination_details) {
+            return response()->json([
+                'rajaongkir' => [
+                    'query' => $request->all(),
+                    'status' => [
+                        'code' => 404,
+                        'description' => 'Origin or Destination not found.',
+                    ],
+                ]
+            ], 404);
         }
 
-        $destination_details = [];
-        if ($request->destinationType == 'city') {
-            $destination_details = City::where('city_id', $request->destination)->first();
-        } else {
-            $destination_details = Subdistrict::where('subdistrict_id', $request->destination)->first();
-        }
-
+        // 3. Hit service untuk ambil ongkir
         $shippingResult = $this->shipping->getCost([
-            'origin'        => $origin_details['postal_code'],
-            'destination'   => $destination_details['postal_code'],
-            'weight'        => $request->weight,
-            'courier'       => $request->courier,
+            'origin'      => $origin_details->postal_code,
+            'destination' => $destination_details->postal_code,
+            'weight'      => $request->weight,
+            'courier'     => $request->courier,
+            'length'      => $request->length,
+            'width'       => $request->width,
+            'height'      => $request->height,
+            'diameter'    => $request->diameter,
         ]);
 
-        if ($shippingResult['status'] == 200) {
-            $shippingResult = json_decode($shippingResult['data'], true);
+        if ($shippingResult['error']) {
+            return response()->json([
+                'rajaongkir' => [
+                    'query' => $request->all(),
+                    'origin_details' => $origin_details,
+                    'destination_details' => $destination_details,
+                    'status' => [
+                        'code' => $shippingResult['status'],
+                        'description' => $shippingResult['message'] ?? 'Unknown error',
+                    ]
+                ]
+            ], $shippingResult['status']);
         }
 
-        $results = [];
-        foreach ($shippingResult as $courierData) {
-            $results[] = [
+        // 4. Format response seperti RajaOngkir
+        $formatted = [];
+        foreach ($shippingResult['data'] as $courierData) {
+            $formatted[] = [
                 'code' => $courierData['code'],
                 'name' => $courierData['name'],
                 'costs' => [
@@ -80,7 +107,7 @@ class CostController extends Controller
                             [
                                 'value' => $courierData['cost'],
                                 'etd' => $courierData['etd'] ?? '',
-                                'note' => ''
+                                'note' => '',
                             ]
                         ]
                     ]
@@ -88,18 +115,18 @@ class CostController extends Controller
             ];
         }
 
-
-        $result['rajaongkir'] = [
-            'query'                 => $request->all(),
-            'origin_details'        => $origin_details,
-            'destination_details'   => $destination_details,
-            'status'                => [
-                'code'          => $status_code,
-                'description'   => $status_description,
-            ],
-            'results'               => $results
-        ];
-
-        return response()->json($result);
+        return response()->json([
+            'rajaongkir' => [
+                'query' => $request->all(),
+                'origin_details' => $origin_details,
+                'destination_details' => $destination_details,
+                'status' => [
+                    'code' => 200,
+                    'description' => 'OK',
+                ],
+                'results' => $formatted,
+                'raw' => $shippingResult
+            ]
+        ]);
     }
 }

@@ -13,13 +13,10 @@ return new class extends Migration
     {
         Schema::create('costs', function (Blueprint $table) {
             $table->id();
-            $table->string('origin')->unique();
-            $table->string('origin_type')->nullable();
-            $table->string('destination')->unique();
-            $table->string('destination_type')->nullable();
-            $table->string('courier');
-            $table->unsignedInteger('weight')->nullable();
-            $table->json('result')->nullable();
+            $table->string('origin');
+            $table->string('destination');
+            $table->unsignedInteger('weight');
+            $table->json('service')->nullable();
             $table->timestamps();
         });
     }

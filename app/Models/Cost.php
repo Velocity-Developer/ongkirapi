@@ -16,6 +16,11 @@ class Cost extends Model
         'result',
     ];
 
+    public function cost_services()
+    {
+        return $this->hasMany(CostService::class);
+    }
+
     protected $casts = [
         'result' => 'array',
     ];
