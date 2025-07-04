@@ -22,8 +22,10 @@ class ShippingService
   {
     $start = microtime(true); // Hitung durasi request
 
-    $ip = $payload['ip_address'] ?? '0.0.0.0';
-    $userAgent = $payload['user_agent'] ?? '';
+    // {"width": null, "height": null, "length": null, "origin": "57462", "weight": "1000", "courier": "jne:jnt", "diameter": null, "ip_address": "127.0.0.1", "user_agent": "PostmanRuntime/7.44.1", "destination": "11710"}
+
+    $ip = $payload['ip_address'];
+    $userAgent = $payload['user_agent'];
 
     // 1. Cek apakah data sudah ada di database
     $existing = Cost::with('cost_services')->where([
@@ -42,7 +44,7 @@ class ShippingService
         'duration_ms'   => round((microtime(true) - $start) * 1000),
         'payload'       => $payload,
         'ip_address'    => $ip,
-        'user_agent'    => $userAgent,
+        'user_agent'    => (string) $userAgent,
       ]);
 
       return [
@@ -79,8 +81,8 @@ class ShippingService
         'duration_ms'   => $duration,
         'payload'       => $payload,
         'error_message' => $response->body(),
-        'ip_address'    => $ip,
-        'user_agent'    => $userAgent,
+        'ip_address'    => (string) $ip,
+        'user_agent'    => (string) $userAgent,
       ]);
 
       return [
@@ -94,13 +96,14 @@ class ShippingService
     $services = $decoded['data'] ?? [];
 
     // 3. Simpan data ke tabel cost dan cost_service
-    foreach ($services as $service) {
-      $cost = Cost::create([
-        'origin'      => $payload['origin'],
-        'destination' => $payload['destination'],
-        'weight'      => $payload['weight'],
-      ]);
+    // 
+    $cost = Cost::create([
+      'origin'      => $payload['origin'],
+      'destination' => $payload['destination'],
+      'weight'      => $payload['weight'],
+    ]);
 
+    foreach ($services as $service) {
       CostService::create([
         'cost_id'     => $cost->id,
         'name'        => $service['name'],
@@ -121,8 +124,8 @@ class ShippingService
       'success'       => true,
       'duration_ms'   => $duration,
       'payload'       => $payload,
-      'ip_address'    => $ip,
-      'user_agent'    => $userAgent,
+      'ip_address'    => (string) $ip,
+      'user_agent'    => (string) $userAgent,
     ]);
 
     return [

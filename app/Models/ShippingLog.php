@@ -15,6 +15,8 @@ class ShippingLog extends Model
     'duration_ms',
     'payload',
     'error_message',
+    'ip_address',
+    'user_agent',
   ];
 
   protected $casts = [

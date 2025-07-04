@@ -98,24 +98,32 @@ class CostController extends Controller
         // 4. Format response seperti RajaOngkir
         $formatted = [];
         foreach ($shippingResult['data'] as $courierData) {
-            $formatted[] = [
-                'code' => $courierData['code'],
-                'name' => $courierData['name'],
-                'costs' => [
+            $code = $courierData['code'];
+
+            // Jika belum ada, inisialisasi dulu
+            if (!isset($formatted[$code])) {
+                $formatted[$code] = [
+                    'code' => $code,
+                    'name' => $courierData['name'],
+                    'costs' => [],
+                ];
+            }
+
+            // Tambahkan service ke dalam daftar costs
+            $formatted[$code]['costs'][] = [
+                'service' => $courierData['service'],
+                'description' => $courierData['description'],
+                'cost' => [
                     [
-                        'service' => $courierData['service'],
-                        'description' => $courierData['description'],
-                        'cost' => [
-                            [
-                                'value' => $courierData['cost'],
-                                'etd' => $courierData['etd'] ?? '',
-                                'note' => '',
-                            ]
-                        ]
+                        'value' => $courierData['cost'],
+                        'etd' => $courierData['etd'] ?? '',
+                        'note' => '',
                     ]
                 ]
             ];
         }
+
+        $formatted = array_values($formatted);
 
         return response()->json([
             'rajaongkir' => [
@@ -126,8 +134,7 @@ class CostController extends Controller
                     'code' => 200,
                     'description' => 'OK',
                 ],
-                'results' => $formatted,
-                'raw' => $shippingResult
+                'results' => $formatted
             ]
         ]);
     }
