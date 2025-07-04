@@ -60,7 +60,7 @@ class ShippingService
     ])->post("{$this->endpoint}/calculate/domestic-cost", [
       'origin'      => (int) $payload['origin'],
       'destination' => (int) $payload['destination'],
-      'weight'      => (int) $payload['weight'],
+      'weight'      => (int) 1000, //fix to 1kg
       'courier'     => $payload['courier'],
       'length'      => $payload['length'] ?? null,
       'width'       => $payload['width'] ?? null,
