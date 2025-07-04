@@ -77,6 +77,8 @@ class CostController extends Controller
             'width'       => $request->width,
             'height'      => $request->height,
             'diameter'    => $request->diameter,
+            'ip_address'  => request()->ip(),
+            'user_agent'  => request()->header('User-Agent'),
         ]);
 
         if ($shippingResult['error']) {

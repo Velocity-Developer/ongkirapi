@@ -4,6 +4,7 @@ namespace App\Services;
 
 use App\Models\Cost;
 use App\Models\CostService;
+use App\Models\ShippingLog;
 use Illuminate\Support\Facades\Http;
 
 class ShippingService
@@ -19,6 +20,11 @@ class ShippingService
 
   public function getCost(array $payload)
   {
+    $start = microtime(true); // Hitung durasi request
+
+    $ip = $payload['ip_address'] ?? '0.0.0.0';
+    $userAgent = $payload['user_agent'] ?? '';
+
     // 1. Cek apakah data sudah ada di database
     $existing = Cost::with('cost_services')->where([
       'origin' => $payload['origin'],
@@ -27,6 +33,18 @@ class ShippingService
     ])->first();
 
     if ($existing) {
+      ShippingLog::create([
+        'method'        => 'POST',
+        'endpoint'      => '/calculate/domestic-cost',
+        'source'        => 'db',
+        'status_code'   => 200,
+        'success'       => true,
+        'duration_ms'   => round((microtime(true) - $start) * 1000),
+        'payload'       => $payload,
+        'ip_address'    => $ip,
+        'user_agent'    => $userAgent,
+      ]);
+
       return [
         'error' => false,
         'status' => 200,
@@ -34,7 +52,7 @@ class ShippingService
       ];
     }
 
-    // 2. Ambil dari API jika belum ada
+    // 2. Ambil dari API
     $response = Http::asForm()->withHeaders([
       'key' => $this->apiKey,
     ])->post("{$this->endpoint}/calculate/domestic-cost", [
@@ -49,7 +67,22 @@ class ShippingService
       'price'       => $payload['price'] ?? 'lowest',
     ]);
 
+    $duration = round((microtime(true) - $start) * 1000);
+
     if (!$response->successful()) {
+      ShippingLog::create([
+        'method'        => 'POST',
+        'endpoint'      => '/calculate/domestic-cost',
+        'source'        => 'api',
+        'status_code'   => $response->status(),
+        'success'       => false,
+        'duration_ms'   => $duration,
+        'payload'       => $payload,
+        'error_message' => $response->body(),
+        'ip_address'    => $ip,
+        'user_agent'    => $userAgent,
+      ]);
+
       return [
         'error' => true,
         'status' => $response->status(),
@@ -60,7 +93,7 @@ class ShippingService
     $decoded = $response->json();
     $services = $decoded['data'] ?? [];
 
-    // 3. Simpan ke tabel costs
+    // 3. Simpan data ke tabel cost dan cost_service
     foreach ($services as $service) {
       $cost = Cost::create([
         'origin'      => $payload['origin'],
@@ -68,7 +101,6 @@ class ShippingService
         'weight'      => $payload['weight'],
       ]);
 
-      // 4. Simpan ke tabel cost_services
       CostService::create([
         'cost_id'     => $cost->id,
         'name'        => $service['name'],
@@ -80,11 +112,24 @@ class ShippingService
       ]);
     }
 
+    // 4. Log API success
+    ShippingLog::create([
+      'method'        => 'POST',
+      'endpoint'      => '/calculate/domestic-cost',
+      'source'        => 'api',
+      'status_code'   => $response->status(),
+      'success'       => true,
+      'duration_ms'   => $duration,
+      'payload'       => $payload,
+      'ip_address'    => $ip,
+      'user_agent'    => $userAgent,
+    ]);
+
     return [
       'error' => false,
       'status' => 200,
       'data' => $services,
-      'payload' => $payload
+      'payload' => $payload,
     ];
   }
 }
