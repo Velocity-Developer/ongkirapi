@@ -34,6 +34,13 @@ class CostController extends Controller
             'diameter'          => ['nullable', 'numeric'],
         ]);
 
+        //weight
+        $weight = $request->weight ?? 1000;
+
+        //pembulatan 
+        $weight_fix = ceil($weight / 1000) * 1000;
+        $weight_fix = $weight_fix / 1000;
+
         if ($validator->fails()) {
             return response()->json([
                 'rajaongkir' => [
@@ -99,6 +106,7 @@ class CostController extends Controller
         $formatted = [];
         foreach ($shippingResult['data'] as $courierData) {
             $code = $courierData['code'];
+            $cost = $courierData['cost'];
 
             // Jika belum ada, inisialisasi dulu
             if (!isset($formatted[$code])) {
@@ -115,7 +123,7 @@ class CostController extends Controller
                 'description' => $courierData['description'],
                 'cost' => [
                     [
-                        'value' => $courierData['cost'],
+                        'value' => $cost * $weight_fix,
                         'etd' => $courierData['etd'] ?? '',
                         'note' => '',
                     ]

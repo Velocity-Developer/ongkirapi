@@ -29,9 +29,8 @@ class ShippingService
 
     // 1. Cek apakah data sudah ada di database
     $existing = Cost::with('cost_services')->where([
-      'origin' => $payload['origin'],
+      'origin'      => $payload['origin'],
       'destination' => $payload['destination'],
-      'weight' => $payload['weight'],
     ])->first();
 
     if ($existing) {
@@ -100,7 +99,7 @@ class ShippingService
     $cost = Cost::create([
       'origin'      => $payload['origin'],
       'destination' => $payload['destination'],
-      'weight'      => $payload['weight'],
+      'weight'      => 1000,
     ]);
 
     foreach ($services as $service) {
