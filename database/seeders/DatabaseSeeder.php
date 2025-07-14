@@ -23,7 +23,12 @@ class DatabaseSeeder extends Seeder
         $this->call([
             ProvinceSeeder::class,
             CitySeeder::class,
-            SubdistrictSeeder::class
+            SubdistrictSeeder::class,
+
+            // raja ongkir
+            RajaOngkirProvinceSeeder::class,
+
+
         ]);
     }
 }
