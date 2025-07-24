@@ -26,12 +26,34 @@ class ShippingService
 
     $ip = $payload['ip_address'];
     $userAgent = $payload['user_agent'];
+    $couriers = $payload['courier'] ? explode(':', $payload['courier']) : [];
 
-    // 1. Cek apakah data sudah ada di database
-    $existing = Cost::with('cost_services')->where([
+    //1. Cek Cost ada atau tidak
+    $The_cost = Cost::where([
       'origin'      => $payload['origin'],
       'destination' => $payload['destination'],
     ])->first();
+
+    //jika tidak ada, buat baru
+    if (!$The_cost) {
+      $The_cost = Cost::create([
+        'origin'      => $payload['origin'],
+        'destination' => $payload['destination'],
+        'weight'      => 1000
+      ]);
+    }
+    $cost_id = $The_cost->id ?? null;
+
+    // 2. Cek apakah data sudah ada di database
+    $existing = Cost::with('cost_services')
+      ->where([
+        'origin'      => $payload['origin'],
+        'destination' => $payload['destination'],
+      ])
+      ->whereHas('cost_services', function ($query) use ($couriers) {
+        $query->whereIn('code', $couriers);
+      })
+      ->first();
 
     if ($existing) {
       ShippingLog::create([
@@ -94,17 +116,10 @@ class ShippingService
     $decoded = $response->json();
     $services = $decoded['data'] ?? [];
 
-    // 3. Simpan data ke tabel cost dan cost_service
-    // 
-    $cost = Cost::create([
-      'origin'      => $payload['origin'],
-      'destination' => $payload['destination'],
-      'weight'      => 1000,
-    ]);
-
+    // 3. Simpan data ke tabel cost_service
     foreach ($services as $service) {
       CostService::create([
-        'cost_id'     => $cost->id,
+        'cost_id'     => $cost_id,
         'name'        => $service['name'],
         'code'        => $service['code'],
         'service'     => $service['service'],
