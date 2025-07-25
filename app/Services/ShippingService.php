@@ -6,6 +6,7 @@ use App\Models\Cost;
 use App\Models\CostService;
 use App\Models\ShippingLog;
 use Illuminate\Support\Facades\Http;
+use App\Helpers\LogJsonHelper;
 
 class ShippingService
 {
@@ -76,9 +77,7 @@ class ShippingService
     }
 
     // 2. Ambil dari API
-    $response = Http::asForm()->withHeaders([
-      'key' => $this->apiKey,
-    ])->post("{$this->endpoint}/calculate/domestic-cost", [
+    $params_body = [
       'origin'      => (int) $payload['origin'],
       'destination' => (int) $payload['destination'],
       'weight'      => (int) 1000, //fix to 1kg
@@ -88,6 +87,15 @@ class ShippingService
       'height'      => $payload['height'] ?? null,
       'diameter'    => $payload['diameter'] ?? null,
       'price'       => $payload['price'] ?? 'lowest',
+    ];
+    $response = Http::asForm()->withHeaders([
+      'key' => $this->apiKey,
+    ])->post("{$this->endpoint}/calculate/domestic-cost", $params_body);
+
+    //simpan log json
+    LogJsonHelper::log([
+      'payload'   => $params_body,
+      'response'  => $response->json(),
     ]);
 
     $duration = round((microtime(true) - $start) * 1000);
