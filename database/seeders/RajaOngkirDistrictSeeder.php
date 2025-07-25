@@ -61,8 +61,8 @@ class RajaOngkirDistrictSeeder extends Seeder
 
             $this->command->info($total_city . "/" . $counter . " Imported districts for city: {$city->name}");
 
-            //delay 10-30 detik
-            sleep(rand(10, 30));
+            //delay 30-50 detik
+            sleep(rand(30, 50));
 
             $counter++;
         }
