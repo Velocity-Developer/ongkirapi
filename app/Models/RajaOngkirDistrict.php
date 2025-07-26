@@ -27,4 +27,9 @@ class RajaOngkirDistrict extends Model
     {
         return $this->belongsTo(RajaOngkirCity::class, 'city_id');
     }
+
+    public function subDistricts()
+    {
+        return $this->hasMany(RajaongkirSubDistrict::class, 'district_id');
+    }
 }
