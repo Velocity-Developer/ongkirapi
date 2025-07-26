@@ -56,8 +56,16 @@ class RajaOngkirSubDistrictSeeder extends Seeder
 
       $this->command->info($total_districts . "/" . $counter . " Imported sub districts for district: {$district->name}");
 
-      // Delay 30-50 detik
-      sleep(rand(30, 50));
+      // Delay dengan countdown
+      $delay = rand(5, 20);
+      $this->command->info("Waiting {$delay} seconds before next district...");
+
+      for ($i = $delay; $i > 0; $i--) {
+        $this->command->line("Countdown: {$i} seconds remaining...");
+        sleep(1);
+      }
+
+      $this->command->info("Continuing to next district...");
 
       $counter++;
     }
