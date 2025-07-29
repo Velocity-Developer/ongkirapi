@@ -27,7 +27,14 @@ class ShippingService
 
     $ip = $payload['ip_address'];
     $userAgent = $payload['user_agent'];
+
     $couriers = $payload['courier'] ? explode(':', $payload['courier']) : [];
+    //the valid courier is jne, sicepat, ide, sap, jnt, ninja, tiki, lion, anteraja, pos, ncs, rex, rpx, sentral, star, wahana, dse
+    //jika di couriers ada yang tidak valid, hapus dari array
+
+    $couriers = array_filter($couriers, function ($code) {
+      return in_array($code, ['jne', 'sicepat', 'ide', 'sap', 'jnt', 'ninja', 'tiki', 'lion', 'anteraja', 'pos', 'ncs', 'rex', 'rpx', 'sentral', 'star', 'wahana', 'dse']);
+    });
 
     //1. Cek Cost ada atau tidak
     $The_cost = Cost::where([
@@ -81,7 +88,7 @@ class ShippingService
       'origin'      => (int) $payload['origin'],
       'destination' => (int) $payload['destination'],
       'weight'      => (int) 1000, //fix to 1kg
-      'courier'     => $payload['courier'],
+      'courier'     => $couriers ? implode(':', $couriers) : null,
       'length'      => $payload['length'] ?? null,
       'width'       => $payload['width'] ?? null,
       'height'      => $payload['height'] ?? null,
