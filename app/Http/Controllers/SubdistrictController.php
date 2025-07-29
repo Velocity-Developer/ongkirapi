@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use App\Models\Subdistrict;
+use App\Models\ShippingLog;
 
 class SubdistrictController extends Controller
 {
@@ -12,6 +13,8 @@ class SubdistrictController extends Controller
      */
     public function index(Request $request)
     {
+        $start = microtime(true); // Hitung durasi request
+
         //get all subdistricts
         $query = Subdistrict::select('subdistrict_id', 'subdistrict_name', 'city_id', 'city', 'province_id', 'province', 'type');
 
@@ -26,6 +29,19 @@ class SubdistrictController extends Controller
         }
 
         $data = $query->get();
+
+        //log
+        ShippingLog::create([
+            'method'        => 'POST',
+            'endpoint'      => '/v1/subdistrict',
+            'source'        => 'db',
+            'status_code'   => 200,
+            'success'       => true,
+            'duration_ms'   => round((microtime(true) - $start) * 1000),
+            'payload'       => $request->all(),
+            'ip_address'    => request()->ip(),
+            'user_agent'    => request()->header('User-Agent'),
+        ]);
 
         $result['rajaongkir'] = [
             'query' => $request->all(),

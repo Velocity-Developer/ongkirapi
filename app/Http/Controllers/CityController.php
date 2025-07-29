@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use App\Models\City;
+use App\Models\ShippingLog;
 
 class CityController extends Controller
 {
@@ -12,6 +13,8 @@ class CityController extends Controller
      */
     public function index(Request $request)
     {
+        $start = microtime(true); // Hitung durasi request
+
         //get cities
         $query = City::select('city_id', 'city_name', 'province_id', 'province', 'type', 'postal_code');
 
@@ -26,6 +29,19 @@ class CityController extends Controller
         }
 
         $data = $query->get();
+
+        //log
+        ShippingLog::create([
+            'method'        => 'POST',
+            'endpoint'      => '/v1/city',
+            'source'        => 'db',
+            'status_code'   => 200,
+            'success'       => true,
+            'duration_ms'   => round((microtime(true) - $start) * 1000),
+            'payload'       => $request->all(),
+            'ip_address'    => request()->ip(),
+            'user_agent'    => request()->header('User-Agent'),
+        ]);
 
         $result['rajaongkir'] = [
             'query' => $request->all(),

@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use App\Models\Province;
+use App\Models\ShippingLog;
 
 class ProvinceController extends Controller
 {
@@ -12,6 +13,8 @@ class ProvinceController extends Controller
      */
     public function index(Request $request)
     {
+        $start = microtime(true); // Hitung durasi request
+
         //get all provinces
         $query = Province::select('province_id', 'province');
 
@@ -21,6 +24,20 @@ class ProvinceController extends Controller
         }
 
         $data = $query->get();
+
+
+        //log
+        ShippingLog::create([
+            'method'        => 'POST',
+            'endpoint'      => '/v1/province',
+            'source'        => 'db',
+            'status_code'   => 200,
+            'success'       => true,
+            'duration_ms'   => round((microtime(true) - $start) * 1000),
+            'payload'       => $request->all(),
+            'ip_address'    => request()->ip(),
+            'user_agent'    => request()->header('User-Agent'),
+        ]);
 
         $result['rajaongkir'] = [
             'query' => $request->all(),
