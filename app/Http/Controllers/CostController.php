@@ -8,6 +8,7 @@ use Illuminate\Support\Facades\Validator;
 use App\Models\City;
 use App\Models\Subdistrict;
 use App\Services\ShippingService;
+use App\Helpers\RajaOngkirHelper;
 
 class CostController extends Controller
 {
@@ -74,10 +75,14 @@ class CostController extends Controller
             ], 404);
         }
 
-        // 3. Hit service untuk ambil ongkir
+        // 3. Konversi postal code ke subdistric ID
+        $origin_subdistric_id = RajaOngkirHelper::getSubDistrictIdByZipCode($origin_details->postal_code);
+        $destination_subdistric_id = RajaOngkirHelper::getSubDistrictIdByZipCode($destination_details->postal_code);
+
+        // 4. Hit service untuk ambil ongkir
         $shippingResult = $this->shipping->getCost([
-            'origin'      => $origin_details->postal_code,
-            'destination' => $destination_details->postal_code,
+            'origin'      => $origin_subdistric_id ?: $origin_details->postal_code,
+            'destination' => $destination_subdistric_id ?: $destination_details->postal_code,
             'weight'      => $request->weight,
             'courier'     => $request->courier,
             'length'      => $request->length,
