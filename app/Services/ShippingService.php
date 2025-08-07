@@ -171,7 +171,7 @@ class ShippingService
   {
     $start = microtime(true);
 
-    $awb = RajaOngkirAwb::where('waybill_number', $payload['awb'])->first();
+    $awb = RajaongkirAwb::where('waybill_number', $payload['awb'])->first();
 
     // Jika tidak ada atau ada tapi status bukan DELIVERED dan updated_at lebih dari 1 jam
     if (!$awb || $awb->status !== 'DELIVERED' && $awb->updated_at < now()->subHour()) {
@@ -187,7 +187,7 @@ class ShippingService
         if ($response->successful()) {
             $data = $response->json();
 
-            RajaOngkirAwb::updateOrCreate(
+            RajaongkirAwb::updateOrCreate(
                 ['waybill_number' => $data['data']['details']['waybill_number']],
                 [
                     'courier' => $data['data']['summary']['courier_name'] .'-'.$data['data']['summary']['service_code'],
