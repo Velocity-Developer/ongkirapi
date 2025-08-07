@@ -260,6 +260,10 @@ class ShippingService
                     'destination' => $awb->receiver_address,
                     'status' => $awb->status,
                   ],
+                  'details' => [
+                    'waybill_time' => explode(" ", $awb->waybill_date)[1] ?? null,
+                    'weight' => $awb->weight,
+                  ],
                   // jika manifest tidak kosong, tampilkan manifest
                   'manifest' => $new_manifest ? array_map(function ($m) {
                     return [
@@ -323,6 +327,10 @@ class ShippingService
               'receiver_name' => $awb->receiver_name,
               'destination' => $awb->receiver_address,
               'status' => $awb->status,
+            ],
+            'details' => [
+              'waybill_time' => explode(" ", $awb->waybill_date)[1] ?? null,
+              'weight' => $awb->weight,
             ],
             // jika manifest tidak kosong, tampilkan manifest
             'manifest' => $new_manifest ? array_map(function ($m) {
