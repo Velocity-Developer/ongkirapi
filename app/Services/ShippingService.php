@@ -5,7 +5,7 @@ namespace App\Services;
 use App\Models\Cost;
 use App\Models\CostService;
 use App\Models\ShippingLog;
-use App\Models\RajaOngkirAwb;
+use App\Models\RajaongkirAwb;
 use App\Models\RajaongkirAwbManifest;
 use Illuminate\Support\Facades\Http;
 use App\Helpers\LogJsonHelper;
@@ -203,7 +203,7 @@ class ShippingService
             );
 
             // Ambil data yang baru saja disimpan
-            $awb = RajaOngkirAwb::where('waybill_number', $data['data']['details']['waybill_number'])->first();
+            $awb = RajaongkirAwb::where('waybill_number', $data['data']['details']['waybill_number'])->first();
             
             // simpan ke manifest
             if (isset($data['data']['manifest']) && is_array($data['data']['manifest'])) {
