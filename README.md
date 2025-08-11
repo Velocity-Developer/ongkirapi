@@ -1,61 +1,280 @@
-<p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400" alt="Laravel Logo"></a></p>
+# Ongkir API
 
-<p align="center">
-<a href="https://github.com/laravel/framework/actions"><img src="https://github.com/laravel/framework/workflows/tests/badge.svg" alt="Build Status"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/dt/laravel/framework" alt="Total Downloads"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/v/laravel/framework" alt="Latest Stable Version"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
-</p>
+A Laravel-based Indonesian shipping cost API that provides access to province, city, district, and subdistrict data with fallback support between local database and external API services.
 
-## About Laravel
+## Features
 
-Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
+- **Dual Data Source**: Automatically checks local database first, falls back to external API if needed
+- **Request Logging**: All API calls are logged with performance metrics and source tracking
+- **Consistent Response Format**: Unified JSON response structure across all endpoints
+- **Rate Limiting**: Built-in protection against API abuse
+- **Error Handling**: Comprehensive error handling with detailed logging
 
-- [Simple, fast routing engine](https://laravel.com/docs/routing).
-- [Powerful dependency injection container](https://laravel.com/docs/container).
-- Multiple back-ends for [session](https://laravel.com/docs/session) and [cache](https://laravel.com/docs/cache) storage.
-- Expressive, intuitive [database ORM](https://laravel.com/docs/eloquent).
-- Database agnostic [schema migrations](https://laravel.com/docs/migrations).
-- [Robust background job processing](https://laravel.com/docs/queues).
-- [Real-time event broadcasting](https://laravel.com/docs/broadcasting).
+## API Versions
 
-Laravel is accessible, powerful, and provides tools required for large, robust applications.
+### V1 API (Legacy)
+Traditional RajaOngkir-compatible responses using local database only.
 
-## Learning Laravel
+### V2 API (Recommended)
+Modern API with enhanced features:
+- Database-first approach with API fallback
+- Consistent response format with `meta` and `data` structure
+- Performance optimized with local data caching
+- Comprehensive request logging
 
-Laravel has the most extensive and thorough [documentation](https://laravel.com/docs) and video tutorial library of all modern web application frameworks, making it a breeze to get started with the framework.
+## V2 API Endpoints
 
-You may also try the [Laravel Bootcamp](https://bootcamp.laravel.com), where you will be guided through building a modern Laravel application from scratch.
+### Base URL
+```
+https://ongkir.velocitydeveloper.id/api/v2
+```
 
-If you don't feel like reading, [Laracasts](https://laracasts.com) can help. Laracasts contains thousands of video tutorials on a range of topics including Laravel, modern PHP, unit testing, and JavaScript. Boost your skills by digging into our comprehensive video library.
+### Authentication
+Include your API key in the request headers:
+```
+Authorization: Bearer YOUR_API_KEY
+```
 
-## Laravel Sponsors
+### Response Format
+All V2 endpoints return responses in the following format:
+```json
+{
+  "meta": {
+    "message": "Success Get [Resource]",
+    "code": 200,
+    "status": "success"
+  },
+  "data": [...]
+}
+```
 
-We would like to extend our thanks to the following sponsors for funding Laravel development. If you are interested in becoming a sponsor, please visit the [Laravel Partners program](https://partners.laravel.com).
+### Endpoints
 
-### Premium Partners
+#### 1. Provinces
 
-- **[Vehikl](https://vehikl.com)**
-- **[Tighten Co.](https://tighten.co)**
-- **[Kirschbaum Development Group](https://kirschbaumdevelopment.com)**
-- **[64 Robots](https://64robots.com)**
-- **[Curotec](https://www.curotec.com/services/technologies/laravel)**
-- **[DevSquad](https://devsquad.com/hire-laravel-developers)**
-- **[Redberry](https://redberry.international/laravel-development)**
-- **[Active Logic](https://activelogic.com)**
+**Get All Provinces**
+```
+GET /v2/province
+```
+
+**Get Province by ID**
+```
+GET /v2/province?id={province_id}
+```
+
+**Example Response:**
+```json
+{
+  "meta": {
+    "message": "Success Get Province",
+    "code": 200,
+    "status": "success"
+  },
+  "data": [
+    {
+      "province_id": "1",
+      "province": "Bali"
+    }
+  ]
+}
+```
+
+#### 2. Cities
+
+**Get All Cities**
+```
+GET /v2/city
+```
+
+**Get Cities by Province**
+```
+GET /v2/city/{province_id}
+GET /v2/city?province={province_id}
+```
+
+**Get City by ID**
+```
+GET /v2/city?id={city_id}
+```
+
+**Example Response:**
+```json
+{
+  "meta": {
+    "message": "Success Get City",
+    "code": 200,
+    "status": "success"
+  },
+  "data": [
+    {
+      "city_id": "17",
+      "type": "Kabupaten",
+      "city_name": "Badung",
+      "postal_code": "80351",
+      "province_id": "1",
+      "province": "Bali"
+    }
+  ]
+}
+```
+
+#### 3. Districts
+
+**Get All Districts**
+```
+GET /v2/district
+```
+
+**Get Districts by City**
+```
+GET /v2/district/{city_id}
+GET /v2/district?city={city_id}
+```
+
+**Get District by ID**
+```
+GET /v2/district?id={district_id}
+```
+
+**Example Response:**
+```json
+{
+  "meta": {
+    "message": "Success Get District",
+    "code": 200,
+    "status": "success"
+  },
+  "data": [
+    {
+      "district_id": "1",
+      "district_name": "Abiansemal",
+      "city_id": "17",
+      "city": "Badung",
+      "type": "Kabupaten",
+      "province_id": "1",
+      "province": "Bali"
+    }
+  ]
+}
+```
+
+#### 4. Subdistricts
+
+**Get All Subdistricts**
+```
+GET /v2/subdistrict
+```
+
+**Get Subdistricts by City**
+```
+GET /v2/subdistrict?city={city_id}
+```
+
+**Get Subdistrict by District ID**
+```
+GET /v2/subdistrict/{district_id}
+```
+
+**Get Subdistrict by ID**
+```
+GET /v2/subdistrict?id={subdistrict_id}
+```
+
+**Example Response:**
+```json
+{
+  "meta": {
+    "message": "Success Get Subdistrict",
+    "code": 200,
+    "status": "success"
+  },
+  "data": [
+    {
+      "subdistrict_id": "1",
+      "subdistrict_name": "Abiansemal",
+      "city_id": "17",
+      "city": "Badung",
+      "type": "Kabupaten",
+      "province_id": "1",
+      "province": "Bali"
+    }
+  ]
+}
+```
+
+## Data Sources
+
+The API intelligently manages data from two sources:
+
+1. **Local Database** (Primary): Fast response times, no external dependencies
+2. **External API** (Fallback): Ensures data completeness when local data is unavailable
+
+### Request Logging
+
+All requests are logged with the following information:
+- Request method and endpoint
+- Data source used (`db` or `api`)
+- Response time in milliseconds
+- Success/failure status
+- Client IP address and User-Agent
+- Request payload
+
+## Error Handling
+
+### Error Response Format
+```json
+{
+  "meta": {
+    "message": "Error description",
+    "code": 500,
+    "status": "error"
+  },
+  "data": []
+}
+```
+
+### Common Error Codes
+- `200`: Success
+- `400`: Bad Request (Invalid parameters)
+- `404`: Not Found (Resource not found)
+- `500`: Internal Server Error
+
+## Performance
+
+- **Database queries**: Sub-millisecond response times for local data
+- **API fallback**: Automatic fallback when local data is unavailable
+- **Caching**: Local database acts as a cache for frequently accessed data
+- **Logging**: Minimal performance impact with asynchronous logging
+
+## Installation
+
+1. Clone the repository
+2. Install dependencies: `composer install`
+3. Configure environment variables in `.env`
+4. Run migrations: `php artisan migrate`
+5. Seed the database (optional): `php artisan db:seed`
+6. Start the server: `php artisan serve`
+
+## Environment Variables
+
+```env
+RAJAONGKIR_API_KEY=your_rajaongkir_api_key
+RAJAONGKIR_API_URL=https://api.rajaongkir.com/starter
+API_KEY=your_api_key_for_authentication
+```
 
 ## Contributing
 
-Thank you for considering contributing to the Laravel framework! The contribution guide can be found in the [Laravel documentation](https://laravel.com/docs/contributions).
-
-## Code of Conduct
-
-In order to ensure that the Laravel community is welcoming to all, please review and abide by the [Code of Conduct](https://laravel.com/docs/contributions#code-of-conduct).
-
-## Security Vulnerabilities
-
-If you discover a security vulnerability within Laravel, please send an e-mail to Taylor Otwell via [taylor@laravel.com](mailto:taylor@laravel.com). All security vulnerabilities will be promptly addressed.
+1. Fork the repository
+2. Create a feature branch
+3. Commit your changes
+4. Push to the branch
+5. Create a Pull Request
 
 ## License
 
-The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+
+## Support
+
+For support and questions, please contact the development team or create an issue in the repository.

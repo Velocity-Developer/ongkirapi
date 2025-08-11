@@ -23,14 +23,14 @@ class RajaongkirSubDistrict extends Model
 
   public function district()
   {
-    return $this->belongsTo(RajaongkirDistrict::class, 'district_id');
+    return $this->belongsTo(RajaOngkirDistrict::class, 'district_id');
   }
 
   public function province()
   {
     return $this->hasOneThrough(
-      RajaongkirProvince::class,
-      RajaongkirDistrict::class,
+      RajaOngkirProvince::class,
+      RajaOngkirDistrict::class,
       'id',
       'id',
       'district_id',
