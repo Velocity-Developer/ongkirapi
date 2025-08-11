@@ -5,6 +5,7 @@ namespace App\Http\Controllers\V2;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use App\Models\Province;
+use App\Models\RajaOngkirProvince;
 use App\Models\ShippingLog;
 use Illuminate\Support\Facades\Http;
 
@@ -27,11 +28,11 @@ class ProvinceController extends Controller
         $start = microtime(true);
 
         try {
-            // First, check database
-            $query = Province::select('province_id', 'province');
+            // First, check database - use RajaOngkir table
+            $query = RajaOngkirProvince::select('id as province_id', 'name as province');
 
             if ($request->id) {
-                $query->where('province_id', $request->id);
+                $query->where('id', $request->id);
             }
 
             $dbData = $query->get();

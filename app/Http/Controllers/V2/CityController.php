@@ -5,6 +5,7 @@ namespace App\Http\Controllers\V2;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use App\Models\City;
+use App\Models\RajaOngkirCity;
 use App\Models\ShippingLog;
 use Illuminate\Support\Facades\Http;
 
@@ -27,11 +28,11 @@ class CityController extends Controller
         $start = microtime(true);
 
         try {
-            // First, check database
-            $query = City::select('city_id', 'type', 'city_name', 'postal_code', 'province_id', 'province');
+            // First, check database - use RajaOngkir table
+            $query = RajaOngkirCity::select('id as city_id', 'name as city_name', 'province_id');
             
             if ($request->id) {
-                $query->where('city_id', $request->id);
+                $query->where('id', $request->id);
             }
             
             if ($request->province) {
@@ -136,8 +137,8 @@ class CityController extends Controller
         $start = microtime(true);
 
         try {
-            // First, check database
-            $dbData = City::select('city_id', 'type', 'city_name', 'postal_code', 'province_id', 'province')
+            // First, check database - use RajaOngkir table
+            $dbData = RajaOngkirCity::select('id as city_id', 'name as city_name', 'province_id')
                 ->where('province_id', $province_id)
                 ->get();
             

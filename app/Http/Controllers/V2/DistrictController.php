@@ -5,6 +5,7 @@ namespace App\Http\Controllers\V2;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use App\Models\Subdistrict;
+use App\Models\RajaOngkirDistrict;
 use App\Models\ShippingLog;
 use Illuminate\Support\Facades\Http;
 
@@ -27,11 +28,11 @@ class DistrictController extends Controller
         $start = microtime(true);
 
         try {
-            // First, check database
-            $query = Subdistrict::select('subdistrict_id', 'subdistrict_name', 'city_id', 'type', 'city', 'province_id', 'province');
+            // First, check database - use RajaOngkir table
+            $query = RajaOngkirDistrict::select('id as district_id', 'name as district_name', 'city_id');
             
             if ($request->id) {
-                $query->where('subdistrict_id', $request->id);
+                $query->where('id', $request->id);
             }
             
             if ($request->city) {
@@ -45,8 +46,8 @@ class DistrictController extends Controller
                 // Transform to district format
                 $districts = $dbData->map(function($item) {
                     return [
-                        'district_id' => $item->subdistrict_id,
-                        'district_name' => $item->subdistrict_name,
+                        'district_id' => $item->district_id,
+                        'district_name' => $item->district_name,
                         'city_id' => $item->city_id,
                         'city' => $item->city,
                         'type' => $item->type ?? '',
@@ -166,8 +167,8 @@ class DistrictController extends Controller
         $start = microtime(true);
 
         try {
-            // First, check database
-            $query = Subdistrict::select('subdistrict_id', 'subdistrict_name', 'city_id', 'type', 'city', 'province_id', 'province')
+            // First, check database - use RajaOngkir table
+            $query = RajaOngkirDistrict::select('id as district_id', 'name as district_name', 'city_id')
                 ->where('city_id', $city_id);
             
             $dbData = $query->get();
@@ -177,8 +178,8 @@ class DistrictController extends Controller
                 // Transform to district format
                 $districts = $dbData->map(function($item) {
                     return [
-                        'district_id' => $item->subdistrict_id,
-                        'district_name' => $item->subdistrict_name,
+                        'district_id' => $item->district_id,
+                        'district_name' => $item->district_name,
                         'city_id' => $item->city_id,
                         'city' => $item->city,
                         'type' => $item->type ?? '',

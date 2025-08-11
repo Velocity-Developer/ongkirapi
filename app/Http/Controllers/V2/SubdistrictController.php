@@ -5,6 +5,7 @@ namespace App\Http\Controllers\V2;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use App\Models\Subdistrict;
+use App\Models\RajaongkirSubDistrict;
 use App\Models\ShippingLog;
 use Illuminate\Support\Facades\Http;
 
@@ -128,29 +129,43 @@ class SubdistrictController extends Controller
     }
 
     /**
-     * Display subdistricts by city ID (district_id in URL maps to city_id in API)
+     * Display subdistricts by district ID
      */
-    public function show($city_id)
+    public function show($district_id)
     {
         $start = microtime(true);
 
         try {
-            // First, check database for subdistricts by district_id
-            $dbData = Subdistrict::select('subdistrict_id', 'subdistrict_name', 'city_id', 'type', 'city', 'province_id', 'province')
-                ->where('district_id', $city_id)
+            // First, check database for subdistricts by district_id using rajaongkir_sub_districts table
+            $dbData = RajaongkirSubDistrict::select('id as subdistrict_id', 'name as subdistrict_name', 'zip_code', 'district_id')
+                ->where('district_id', $district_id)
                 ->get();
 
             // If data exists in database, return it
             if ($dbData && count($dbData) > 0) {
+                // Transform data to standard subdistrict format
+                $transformedData = $dbData->map(function($item) {
+                    return [
+                        'subdistrict_id' => $item->subdistrict_id,
+                        'subdistrict_name' => $item->subdistrict_name,
+                        'city_id' => null, // Will be filled from relations if needed
+                        'city' => null,
+                        'type' => null,
+                        'province_id' => null,
+                        'province' => null,
+                        'postal_code' => $item->zip_code
+                    ];
+                });
+
                 // Log database request
                 ShippingLog::create([
                     'method'        => 'GET',
-                    'endpoint'      => '/v2/subdistrict/' . $city_id,
+                    'endpoint'      => '/v2/subdistrict/' . $district_id,
                     'source'        => 'db',
                     'status_code'   => 200,
                     'success'       => true,
                     'duration_ms'   => round((microtime(true) - $start) * 1000),
-                    'payload'       => ['district' => $city_id],
+                    'payload'       => ['district_id' => $district_id],
                     'ip_address'    => request()->ip(),
                     'user_agent'    => request()->header('User-Agent'),
                 ]);
@@ -161,7 +176,7 @@ class SubdistrictController extends Controller
                         'code' => 200,
                         'status' => 'success'
                     ],
-                    'data' => $dbData
+                    'data' => $transformedData
                 ];
 
                 return response()->json($result, 200);
@@ -170,7 +185,7 @@ class SubdistrictController extends Controller
             // If no data in DB, fallback to RajaOngkir API
             $response = Http::withHeaders([
                 'key' => $this->rajaongkir_key
-            ])->get($this->rajaongkir_url . '/subdistrict', ['city' => $city_id]);
+            ])->get($this->rajaongkir_url . '/subdistrict', ['city' => $district_id]);
 
             $data = $response->json();
             $status_code = $response->status();
@@ -178,12 +193,12 @@ class SubdistrictController extends Controller
             // Log API request
             ShippingLog::create([
                 'method'        => 'GET',
-                'endpoint'      => '/v2/subdistrict/' . $city_id,
+                'endpoint'      => '/v2/subdistrict/' . $district_id,
                 'source'        => 'api',
                 'status_code'   => $status_code,
                 'success'       => $response->successful(),
                 'duration_ms'   => round((microtime(true) - $start) * 1000),
-                'payload'       => ['city_id' => $city_id],
+                'payload'       => ['district_id' => $district_id],
                 'ip_address'    => request()->ip(),
                 'user_agent'    => request()->header('User-Agent'),
             ]);
@@ -206,12 +221,12 @@ class SubdistrictController extends Controller
             // Log error
             ShippingLog::create([
                 'method'        => 'GET',
-                'endpoint'      => '/v2/subdistrict/' . $city_id,
+                'endpoint'      => '/v2/subdistrict/' . $district_id,
                 'source'        => 'api',
                 'status_code'   => 500,
                 'success'       => false,
                 'duration_ms'   => round((microtime(true) - $start) * 1000),
-                'payload'       => ['city_id' => $city_id],
+                'payload'       => ['district_id' => $district_id],
                 'ip_address'    => request()->ip(),
                 'user_agent'    => request()->header('User-Agent'),
             ]);
