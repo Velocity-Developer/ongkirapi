@@ -9,6 +9,7 @@ use App\Http\Controllers\CityController;
 use App\Http\Controllers\SubdistrictController;
 use App\Http\Controllers\CostController;
 use App\Http\Controllers\RajaOngkirAwbController;
+use App\Http\Controllers\TestController;
 
 // V2 Controllers - Full Relay to RajaOngkir
 use App\Http\Controllers\V2\ProvinceController as V2ProvinceController;
@@ -20,6 +21,11 @@ use App\Http\Controllers\V2\SubdistrictController as V2SubdistrictController;
 Route::middleware(['auth:sanctum'])->group(function () {});
 
 Route::middleware([ApiKeyMiddleware::class])->group(function () {
+    // Test endpoints for debugging API connectivity
+    Route::get('/v2/test', [TestController::class, 'basic']);
+    Route::get('/v2/test/comprehensive', [TestController::class, 'comprehensive']);
+    Route::get('/v2/province/test', [TestController::class, 'province']);
+
     // V1 API - Legacy Database
     Route::apiResources([
         'v1/province'       => ProvinceController::class,
