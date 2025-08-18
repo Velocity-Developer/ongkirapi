@@ -17,7 +17,7 @@ class CostController extends Controller
     public function __construct()
     {
         $this->rajaongkir_key = env('RAJAONGKIR_API_KEY');
-        $this->rajaongkir_url = env('RAJAONGKIR_API_URL', 'https://api.rajaongkir.com/pro');
+        $this->rajaongkir_url = env('RAJAONGKIR_API_URL', 'https://rajaongkir.komerce.id/api/v1/calculate/district/domestic-cost');
     }
 
     public function index(Request $request)
@@ -101,27 +101,7 @@ class CostController extends Controller
             ]);
 
             if ($response->successful()) {
-                // Add district details to response
-                $data['rajaongkir']['origin_details'] = [
-                    'district_id' => $originDistrict->id,
-                    'district_name' => $originDistrict->name,
-                    'city_id' => $originDistrict->city_id,
-                    'city_name' => $originDistrict->city_name ?? '',
-                    'province_id' => $originDistrict->province_id,
-                    'province' => $originDistrict->province_name ?? '',
-                    'type' => $originDistrict->type ?? '',
-                ];
-
-                $data['rajaongkir']['destination_details'] = [
-                    'district_id' => $destinationDistrict->id,
-                    'district_name' => $destinationDistrict->name,
-                    'city_id' => $destinationDistrict->city_id,
-                    'city_name' => $destinationDistrict->city_name ?? '',
-                    'province_id' => $destinationDistrict->province_id,
-                    'province' => $destinationDistrict->province_name ?? '',
-                    'type' => $destinationDistrict->type ?? '',
-                ];
-
+                $data = $response->successful();
                 return response()->json($data, $status_code);
             }
 
