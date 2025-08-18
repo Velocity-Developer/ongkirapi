@@ -2,7 +2,12 @@
   "permissions": {
     "allow": [
       "WebFetch(domain:komerceapi.readme.io)",
-      "Bash(php artisan route:list:*)"
+      "Bash(php artisan route:list:*)",
+      "Bash(php artisan serve:*)",
+      "Bash(grep:*)",
+      "Bash(curl:*)",
+      "Bash(php artisan:*)",
+      "Bash(php artisan config:clear:*)"
     ],
     "deny": [],
     "ask": []

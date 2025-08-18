@@ -101,7 +101,27 @@ class CostController extends Controller
             ]);
 
             if ($response->successful()) {
-                $data = $response->successful();
+                // Add district details to response
+                $data['rajaongkir']['origin_details'] = [
+                    'district_id' => $originDistrict->id,
+                    'district_name' => $originDistrict->name,
+                    'city_id' => $originDistrict->city_id,
+                    'city_name' => $originDistrict->city_name ?? '',
+                    'province_id' => $originDistrict->province_id,
+                    'province' => $originDistrict->province_name ?? '',
+                    'type' => $originDistrict->type ?? '',
+                ];
+
+                $data['rajaongkir']['destination_details'] = [
+                    'district_id' => $destinationDistrict->id,
+                    'district_name' => $destinationDistrict->name,
+                    'city_id' => $destinationDistrict->city_id,
+                    'city_name' => $destinationDistrict->city_name ?? '',
+                    'province_id' => $destinationDistrict->province_id,
+                    'province' => $destinationDistrict->province_name ?? '',
+                    'type' => $destinationDistrict->type ?? '',
+                ];
+
                 return response()->json($data, $status_code);
             }
 
