@@ -16,6 +16,7 @@ use App\Http\Controllers\V2\ProvinceController as V2ProvinceController;
 use App\Http\Controllers\V2\CityController as V2CityController;
 use App\Http\Controllers\V2\DistrictController as V2DistrictController;
 use App\Http\Controllers\V2\SubdistrictController as V2SubdistrictController;
+use App\Http\Controllers\V2\CostController as V2CostController;
 
 
 Route::middleware(['auth:sanctum'])->group(function () {});
@@ -42,5 +43,6 @@ Route::middleware([ApiKeyMiddleware::class])->group(function () {
     ]);
     
     Route::post('/v1/cost', [CostController::class, 'index']);
+    Route::post('/v2/cost', [V2CostController::class, 'index']);
     Route::post('/v1/waybill', [RajaOngkirAwbController::class, 'index']);
 });

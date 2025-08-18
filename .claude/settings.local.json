@@ -1,0 +1,10 @@
+{
+  "permissions": {
+    "allow": [
+      "WebFetch(domain:komerceapi.readme.io)",
+      "Bash(php artisan route:list:*)"
+    ],
+    "deny": [],
+    "ask": []
+  }
+}
