@@ -2,134 +2,144 @@
 
 namespace App\Http\Controllers\V2;
 
-use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
-use Illuminate\Support\Facades\Http;
+
+use App\Http\Controllers\Controller;
 use App\Models\RajaOngkirDistrict;
-use App\Models\ShippingLog;
+use App\Services\ShippingService;
 
 class CostController extends Controller
 {
-    private $rajaongkir_key;
-    private $rajaongkir_url;
+    protected ShippingService $shipping;
 
-    public function __construct()
+    public function __construct(ShippingService $shipping)
     {
-        $this->rajaongkir_key = env('RAJAONGKIR_API_KEY');
-        $this->rajaongkir_url = env('RAJAONGKIR_API_URL', 'https://rajaongkir.komerce.id/api/v1/calculate/district/domestic-cost');
+        $this->shipping = $shipping;
     }
 
     public function index(Request $request)
     {
-        $start = microtime(true);
-
-        // Validate request for district-to-district calculation
+        // 1. Validasi request - V2 hanya terima district ID
         $validator = Validator::make($request->all(), [
             'origin'            => ['required', 'numeric'],
             'destination'       => ['required', 'numeric'],
             'weight'            => ['required', 'numeric'],
-            'courier'           => ['required', 'string'],
+            'courier'           => ['required'],
             'length'            => ['nullable', 'numeric'],
             'width'             => ['nullable', 'numeric'],
             'height'            => ['nullable', 'numeric'],
             'diameter'          => ['nullable', 'numeric'],
         ]);
 
+        //weight
+        $weight = $request->weight ?? 1000;
+
+        //pembulatan 
+        $weight_fix = ceil($weight / 1000) * 1000;
+        $weight_fix = $weight_fix / 1000;
+
         if ($validator->fails()) {
-            return response()->json([
-                'data' => $request->all(),
-                'meta' => [
-                    'code' => 400,
-                    'description' => $validator->errors(),
-                ],
-
-            ], 400);
-        }
-
-        try {
-            // Verify origin and destination district exist in our database
-            $originDistrict = RajaOngkirDistrict::where('id', $request->origin)->first();
-            $destinationDistrict = RajaOngkirDistrict::where('id', $request->destination)->first();
-
-            if (!$originDistrict || !$destinationDistrict) {
-                return response()->json([
-                    'data' => $request->all(),
-                    'meta' => [
-                        'code' => 404,
-                        'description' => 'Origin or destination district not found in database. Please use valid district IDs.',
-                    ],
-
-                ], 404);
-            }
-
-            // Prepare request parameters for RajaOngkir API
-            $params = [
-                'origin' => $request->origin,
-                'originType' => 'subdistrict',
-                'destination' => $request->destination,
-                'destinationType' => 'subdistrict',
-                'weight' => $request->weight,
-                'courier' => $request->courier,
-            ];
-
-            // Add optional dimensional parameters if provided
-            if ($request->length) $params['length'] = $request->length;
-            if ($request->width) $params['width'] = $request->width;
-            if ($request->height) $params['height'] = $request->height;
-            if ($request->diameter) $params['diameter'] = $request->diameter;
-
-            // Make request to RajaOngkir API
-            $response = Http::withHeaders([
-                'key' => $this->rajaongkir_key
-            ])->post($this->rajaongkir_url . '/cost', $params);
-
-            $data = $response->json();
-            $status_code = $response->status();
-
-            // Log API request
-            ShippingLog::create([
-                'method'        => 'POST',
-                'endpoint'      => '/v2/cost',
-                'source'        => 'api',
-                'status_code'   => $status_code,
-                'success'       => $response->successful(),
-                'duration_ms'   => round((microtime(true) - $start) * 1000),
-                'payload'       => $request->all(),
-                'ip_address'    => request()->ip(),
-                'user_agent'    => request()->header('User-Agent'),
-            ]);
-
-            if ($response->successful()) {
-                $data = $response->successful();
-                return response()->json($data, $status_code);
-            }
-
-            // Return error response from RajaOngkir API
-            return response()->json($data, $status_code);
-        } catch (\Exception $e) {
-            // Log error
-            ShippingLog::create([
-                'method'        => 'POST',
-                'endpoint'      => '/v2/cost',
-                'source'        => 'api',
-                'status_code'   => 500,
-                'success'       => false,
-                'duration_ms'   => round((microtime(true) - $start) * 1000),
-                'payload'       => $request->all(),
-                'ip_address'    => request()->ip(),
-                'user_agent'    => request()->header('User-Agent'),
-            ]);
-
             return response()->json([
                 'rajaongkir' => [
                     'query' => $request->all(),
                     'status' => [
-                        'code' => 500,
-                        'description' => 'API Error: ' . $e->getMessage()
+                        'code' => 400,
+                        'description' => $validator->errors(),
+                    ],
+                ]
+            ], 400);
+        }
+
+        // 2. Ambil detail origin/destination dari RajaOngkirDistrict
+        $origin_details = RajaOngkirDistrict::where('id', $request->origin)->first();
+        $destination_details = RajaOngkirDistrict::where('id', $request->destination)->first();
+
+        if (!$origin_details || !$destination_details) {
+            return response()->json([
+                'rajaongkir' => [
+                    'query' => $request->all(),
+                    'status' => [
+                        'code' => 404,
+                        'description' => 'Origin or Destination district not found.',
+                    ],
+                ]
+            ], 404);
+        }
+
+        // 3. V2: Langsung gunakan district ID tanpa konversi postal code
+        // Tidak perlu konversi postal code ke district ID seperti V1
+        
+        // 4. Hit service untuk ambil ongkir
+        $shippingResult = $this->shipping->getCost([
+            'origin'      => $request->origin, // Langsung gunakan district ID
+            'destination' => $request->destination, // Langsung gunakan district ID
+            'weight'      => $request->weight,
+            'courier'     => $request->courier,
+            'length'      => $request->length,
+            'width'       => $request->width,
+            'height'      => $request->height,
+            'diameter'    => $request->diameter,
+            'ip_address'  => request()->ip(),
+            'user_agent'  => request()->header('User-Agent'),
+        ]);
+
+        if ($shippingResult['error']) {
+            return response()->json([
+                'rajaongkir' => [
+                    'query' => $request->all(),
+                    'origin_details' => $origin_details,
+                    'destination_details' => $destination_details,
+                    'status' => [
+                        'code' => $shippingResult['status'],
+                        'description' => $shippingResult['message'] ?? 'Unknown error',
                     ]
                 ]
-            ], 500);
+            ], $shippingResult['status']);
         }
+
+        // 5. Format response seperti RajaOngkir (sama dengan V1)
+        $formatted = [];
+        foreach ($shippingResult['data'] as $courierData) {
+            $code = $courierData['code'];
+            $cost = $courierData['cost'];
+
+            // Jika belum ada, inisialisasi dulu
+            if (!isset($formatted[$code])) {
+                $formatted[$code] = [
+                    'code' => $code,
+                    'name' => $courierData['name'],
+                    'costs' => [],
+                ];
+            }
+
+            // Tambahkan service ke dalam daftar costs
+            $formatted[$code]['costs'][] = [
+                'service' => $courierData['service'],
+                'description' => $courierData['description'],
+                'cost' => [
+                    [
+                        'value' => $cost * $weight_fix,
+                        'etd' => $courierData['etd'] ?? '',
+                        'note' => '',
+                    ]
+                ]
+            ];
+        }
+
+        $formatted = array_values($formatted);
+
+        return response()->json([
+            'rajaongkir' => [
+                'query' => $request->all(),
+                'origin_details' => $origin_details,
+                'destination_details' => $destination_details,
+                'status' => [
+                    'code' => 200,
+                    'description' => 'OK',
+                ],
+                'results' => $formatted
+            ]
+        ]);
     }
 }
