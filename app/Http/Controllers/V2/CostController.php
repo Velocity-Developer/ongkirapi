@@ -7,13 +7,13 @@ use Illuminate\Support\Facades\Validator;
 
 use App\Http\Controllers\Controller;
 use App\Models\RajaOngkirDistrict;
-use App\Services\ShippingService;
+use App\Services\ShippingServiceV2;
 
 class CostController extends Controller
 {
-    protected ShippingService $shipping;
+    protected ShippingServiceV2 $shipping;
 
-    public function __construct(ShippingService $shipping)
+    public function __construct(ShippingServiceV2 $shipping)
     {
         $this->shipping = $shipping;
     }
