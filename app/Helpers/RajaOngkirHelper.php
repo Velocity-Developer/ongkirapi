@@ -8,6 +8,12 @@ class RajaOngkirHelper
 {
     public static function getSubDistrictIdByZipCode($zipCode)
     {
+        //penanganan kode pos = '86121', karena tidak ada subdistric dengan kode pos ini
+        //maka gunakan subdistric id = 35471 milik kecamatan Beru,Sikka, NTT
+        if ($zipCode == 86121) {
+            return 35471;
+        }
+
         //penanganan untuk zip_code = 95247, tidak tersedia
         if ($zipCode == 95247) {
             //gunakan zip_code = 95239, Tuminting kota Manado
