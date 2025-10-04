@@ -14,6 +14,12 @@ class RajaOngkirHelper
             return 35471;
         }
 
+        //penanganan zip_code = 86911, tidak tersedia
+        if ($zipCode == 86911) {
+            //gunakan zip_code = 86472
+            $zipCode = 86472;
+        }
+
         //penanganan untuk zip_code = 95247, tidak tersedia
         if ($zipCode == 95247) {
             //gunakan zip_code = 95239, Tuminting kota Manado
