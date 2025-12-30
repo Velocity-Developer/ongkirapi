@@ -8,3 +8,5 @@ Route::get('/', function () {
 });
 
 Route::get('/kodepos', [PageKodeposController::class, 'index']);
+Route::put('/kodepos/update/{id}', [PageKodeposController::class, 'update']);
+Route::delete('/kodepos/delete/{id}', [PageKodeposController::class, 'delete']);

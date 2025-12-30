@@ -37,6 +37,16 @@ class RajaOngkirHelper
 
         $subDistrict = RajaongkirSubDistrict::where('zip_code', $zipCode)->first();
 
+        //jika $subDistrict kosong, coba cari di KodePos
+        if (!$subDistrict) {
+            $kodepos_cari = KodePos::with([
+                'rajaongkir_sub_district',
+            ])->where('kode_pos', $zipCode)
+                ->whereNotNull('rajaongkir_sub_districts_id')
+                ->first();
+            $subDistrict = $kodepos_cari ? $kodepos_cari->rajaongkir_sub_district : null;
+        }
+
         if (!$subDistrict) {
 
             //get subdistricts_id by postal_kode            
