@@ -4,6 +4,7 @@ namespace App\Helpers;
 
 use App\Models\RajaongkirSubDistrict;
 use App\Models\KodePos;
+use App\Models\Subdistrict;
 use Illuminate\Support\Facades\Log;
 
 class RajaOngkirHelper
@@ -37,10 +38,14 @@ class RajaOngkirHelper
         $subDistrict = RajaongkirSubDistrict::where('zip_code', $zipCode)->first();
 
         if (!$subDistrict) {
-            Log::warning('Kode Pos ' . $zipCode . ' tidak ditemukan di zip_code');
+
+            //get subdistricts_id by postal_kode            
+            $subdistrict = Subdistrict::where('postal_code', $zipCode)->first();
+
             KodePos::updateOrCreate(
                 ['kode_pos' => $zipCode], // kondisi pencarian (UNIQUE KEY)
                 [
+                    'subdistricts_id' => $subdistrict ? $subdistrict->id : null,
                     'status' => 'inactive',
                     'note'   => 'Kode Pos ' . $zipCode . ' tidak ditemukan di zip_code RajaongkirSubDistrict',
                 ]

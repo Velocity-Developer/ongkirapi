@@ -10,8 +10,15 @@ class KodePos extends Model
         'kode_pos',
         'status',
         'rajaongkir_sub_districts_id',
+        'subdistricts_id',
         'note',
     ];
+
+    //relasi ke subdistricts
+    public function subdistrict()
+    {
+        return $this->belongsTo(Subdistrict::class);
+    }
 
     //relasi ke rajaongkir_sub_districts
     public function rajaongkir_sub_district()
