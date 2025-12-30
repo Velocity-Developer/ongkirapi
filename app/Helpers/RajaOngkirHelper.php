@@ -38,11 +38,13 @@ class RajaOngkirHelper
 
         if (!$subDistrict) {
             Log::warning('Kode Pos ' . $zipCode . ' tidak ditemukan di zip_code');
-            KodePos::create([
-                'kode_pos'  => $zipCode,
-                'status'    => 'inactive',
-                'note'      => 'Kode Pos ' . $zipCode . ' tidak ditemukan di zip_code RajaongkirSubDistrict',
-            ]);
+            KodePos::updateOrCreate(
+                ['kode_pos' => $zipCode], // kondisi pencarian (UNIQUE KEY)
+                [
+                    'status' => 'inactive',
+                    'note'   => 'Kode Pos ' . $zipCode . ' tidak ditemukan di zip_code RajaongkirSubDistrict',
+                ]
+            );
         }
 
         return $subDistrict ? $subDistrict->id : null;
