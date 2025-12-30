@@ -13,7 +13,10 @@ class PageKodeposController extends Controller
         $search  = $request->get('q');
         $status  = $request->get('status', 'inactive');
 
-        $kodepos = KodePos::query()
+        $kodepos = KodePos::query()->with([
+            'subdistrict',
+            'rajaongkir_sub_district',
+        ])
             ->where('status', $status)
             ->when($search, function ($query) use ($search) {
                 $query->where('kode_pos', 'like', "%{$search}%");

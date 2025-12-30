@@ -64,6 +64,9 @@
                             <tr class="table-dark">
                                 <th>Kode Pos</th>
                                 <th>Status</th>
+                                <th>Subdistric V1</th>
+                                <th>Subdistric V2</th>
+                                <th>ZIP Code</th>
                                 <th>Note</th>
                                 <th>Cerated</th>
                             </tr>
@@ -72,6 +75,21 @@
                             <tr>
                                 <td>{{ $item->kode_pos }}</td>
                                 <td>{{ $item->status }}</td>
+                                <td>
+                                    @if($item->subdistrict)
+                                    {{ $item->subdistrict->subdistrict_name }}, {{ $item->subdistrict->type }} {{ $item->subdistrict->city }}, {{ $item->subdistrict->province }}
+                                    @endif
+                                </td>
+                                <td>
+                                    @if($item->rajaongkir_sub_district)
+                                    {{ $item->rajaongkir_sub_district->name }}
+                                    @endif
+                                </td>
+                                <td>
+                                    @if($item->rajaongkir_sub_district)
+                                    {{ $item->rajaongkir_sub_district->zip_code }}
+                                    @endif
+                                </td>
                                 <td class="small">{{ $item->note }}</td>
                                 <td>{{ $item->created_at }}</td>
                             </tr>
@@ -103,7 +121,7 @@
     <style>
         @media(min-width: 768px) {
             .container {
-                max-width: 1100px;
+                max-width: 1200px;
             }
         }
     </style>

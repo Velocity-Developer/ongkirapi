@@ -17,12 +17,12 @@ class KodePos extends Model
     //relasi ke subdistricts
     public function subdistrict()
     {
-        return $this->belongsTo(Subdistrict::class);
+        return $this->belongsTo(Subdistrict::class, 'subdistricts_id');
     }
 
     //relasi ke rajaongkir_sub_districts
     public function rajaongkir_sub_district()
     {
-        return $this->belongsTo(RajaongkirSubDistrict::class);
+        return $this->belongsTo(RajaongkirSubDistrict::class, 'rajaongkir_sub_districts_id');
     }
 }
