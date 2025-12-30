@@ -3,6 +3,7 @@
 namespace App\Helpers;
 
 use App\Models\RajaongkirSubDistrict;
+use Illuminate\Support\Facades\Log;
 
 class RajaOngkirHelper
 {
@@ -26,7 +27,17 @@ class RajaOngkirHelper
             $zipCode = 95239;
         }
 
+        //jika kodepos = 15441 , dijadikan 15412
+        if ($zipCode == 15441) {
+            //gunakan zip_code = 95239, Tuminting kota Manado
+            $zipCode = 15412;
+        }
+
         $subDistrict = RajaongkirSubDistrict::where('zip_code', $zipCode)->first();
+
+        if (!$subDistrict) {
+            Log::warning('Kode Pos ' . $zipCode . ' tidak ditemukan di zip_code');
+        }
 
         return $subDistrict ? $subDistrict->id : null;
     }

@@ -9,6 +9,7 @@ use App\Models\City;
 use App\Models\Subdistrict;
 use App\Services\ShippingService;
 use App\Helpers\RajaOngkirHelper;
+use Illuminate\Support\Facades\Log;
 
 class CostController extends Controller
 {
@@ -21,6 +22,20 @@ class CostController extends Controller
 
     public function index(Request $request)
     {
+        // Log::info('Request CostController', [
+        //     'origin' => $request->origin,
+        //     'originType' => $request->originType,
+        //     'destination' => $request->destination,
+        //     'destinationType' => $request->destinationType,
+        //     'weight' => $request->weight,
+        //     'courier' => $request->courier,
+        //     'method' => $request->method(),
+        //     'uri'    => $request->path(),
+        //     'payload' => $request->all(),
+        //     'ip'     => $request->ip(),
+        // ]);
+
+
         // 1. Validasi request
         $validator = Validator::make($request->all(), [
             'origin'            => ['required'],
