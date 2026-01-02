@@ -32,7 +32,7 @@
 
                     <div class="col-md-2">
                         <select name="per_page" class="form-select">
-                            @foreach ([5,10,25,50] as $size)
+                            @foreach ([5,10,25,50,100,500] as $size)
                             <option value="{{ $size }}"
                                 {{ $perPage == $size ? 'selected' : '' }}>
                                 {{ $size }}
@@ -62,6 +62,7 @@
                     <table class="table table-striped">
                         <thead>
                             <tr class="table-dark">
+                                <th>No</th>
                                 <th>Kode Pos</th>
                                 <th>Status</th>
                                 <th>Subdistric V1</th>
@@ -74,6 +75,7 @@
                         <tbody>
                             @foreach ($kodepos as $item)
                             <tr>
+                                <td>{{ $loop->iteration}}</td>
                                 <td>{{ $item->kode_pos }}</td>
                                 <td>
                                     @if($item->status && $item->status == 'active')
