@@ -17,141 +17,136 @@ class CityController extends Controller
     {
         $this->rajaongkir_key = env('RAJAONGKIR_API_KEY');
         $this->rajaongkir_url = env('RAJAONGKIR_API_URL', 'https://api.rajaongkir.com/starter');
-    
-    /**
-     * Display the specified resource.
-     *
-     * @param  int  $id
-     * @return \Illuminate\Http\Response
-     */
-    public function show($id)
-    {
-        $request = new Request(['id' => $id]);
-        return $this->index($request);
     }
-}
 
     /**
-     * Display a listing of cities - check DB first, fallback to API
+     * Display a listing of cities.
      */
     public function index(Request $request)
     {
         $start = microtime(true);
 
         try {
-            // First, check database - use RajaOngkir table
+            // 1. DB Check
             $query = RajaOngkirCity::select('id', 'name', 'province_id');
-
             if ($request->id) {
                 $query->where('id', $request->id);
             }
-
             if ($request->province_id) {
                 $query->where('province_id', $request->province_id);
-            } elseif ($request->province) {
-                // Support legacy parameter name if needed, or strictly use clean schema?
-                // Let's support both for convenience but map to province_id
-                $query->where('province_id', $request->province);
             }
-
             $dbData = $query->get();
 
-            // If data exists in database, return it
-            if ($dbData && count($dbData) > 0) {
-                // Log database request
-                ShippingLog::create([
-                    'method'        => 'GET',
-                    'endpoint'      => '/v3/destination/city',
-                    'source'        => 'db',
-                    'status_code'   => 200,
-                    'success'       => true,
-                    'duration_ms'   => round((microtime(true) - $start) * 1000),
-                    'payload'       => $request->all(),
-                    'ip_address'    => request()->ip(),
-                    'user_agent'    => request()->header('User-Agent'),
-                ]);
-
-                $result = [
-                    'meta' => [
-                        'message' => 'Success Get City',
-                        'code' => 200,
-                        'status' => 'success'
-                    ],
-                    'data' => $dbData
-                ];
-
-                return response()->json($result, 200);
+            if ($dbData->isNotEmpty()) {
+                $this->logRequest('/v3/destination/city', 'db', 200, true, $start, $request->all());
+                return $this->successResponse($dbData);
             }
 
-            // If no data in DB, fallback to RajaOngkir API
-            $response = Http::withHeaders([
-                'key' => $this->rajaongkir_key
-            ])->get($this->rajaongkir_url . '/city', $request->all());
+            // 2. API Fallback
+            // RajaOngkir API /city supports 'id' and 'province' (province_id) parameters
+            $apiParams = [];
+            if ($request->id) $apiParams['id'] = $request->id;
+            if ($request->province_id) $apiParams['province'] = $request->province_id;
+
+            $response = Http::withHeaders(['key' => $this->rajaongkir_key])
+                ->get($this->rajaongkir_url . '/city', $apiParams);
 
             $data = $response->json();
-            $status_code = $response->status();
+            $this->logRequest('/v3/destination/city', 'api', $response->status(), $response->successful(), $start, $request->all());
 
-            // Transform API response to clean schema
-            if (isset($data['rajaongkir']['results'])) {
+            if ($response->successful() && isset($data['rajaongkir']['results'])) {
                 $results = $data['rajaongkir']['results'];
-
+                // Normalize single/list response
                 if (isset($results['city_id'])) {
-                    // Single result
-                    $mapped = [
-                        'id' => $results['city_id'],
-                        'name' => $results['city_name'],
-                        'province_id' => $results['province_id']
-                    ];
-                    $data['rajaongkir']['results'] = $mapped;
-                } else {
-                    // List results
-                    $mapped = array_map(function ($item) {
-                        return [
-                            'id' => $item['city_id'],
-                            'name' => $item['city_name'],
-                            'province_id' => $item['province_id']
-                        ];
-                    }, $results);
-                    $data['rajaongkir']['results'] = $mapped;
+                    $results = [$results];
                 }
+
+                $mapped = array_map(function ($item) {
+                    return [
+                        'id' => $item['city_id'],
+                        'name' => $item['type'] . ' ' . $item['city_name'], // e.g. "Kota Banda Aceh"
+                        'province_id' => $item['province_id']
+                    ];
+                }, $results);
+
+                return $this->successResponse($mapped);
             }
 
-            // Log API request
-            ShippingLog::create([
-                'method'        => 'GET',
-                'endpoint'      => '/v3/destination/city',
-                'source'        => 'api',
-                'status_code'   => $status_code,
-                'success'       => $response->successful(),
-                'duration_ms'   => round((microtime(true) - $start) * 1000),
-                'payload'       => $request->all(),
-                'ip_address'    => request()->ip(),
-                'user_agent'    => request()->header('User-Agent'),
-            ]);
-
-            return response()->json($data, $status_code);
+            return response()->json($data, $response->status());
         } catch (\Exception $e) {
-            // Log error
-            ShippingLog::create([
-                'method'        => 'GET',
-                'endpoint'      => '/v3/destination/city',
-                'source'        => 'api',
-                'status_code'   => 500,
-                'success'       => false,
-                'duration_ms'   => round((microtime(true) - $start) * 1000),
-                'payload'       => $request->all(),
-                'ip_address'    => request()->ip(),
-                'user_agent'    => request()->header('User-Agent'),
-                'error_message' => $e->getMessage()
-            ]);
-
-            return response()->json([
-                'meta' => [
-                    'message' => 'Internal Server Error',
-                    'code' => 500,
-                    'status' => 'error'
-                ]
-            ], 500);
+            $this->logRequest('/v3/destination/city', 'error', 500, false, $start, $request->all(), $e->getMessage());
+            return $this->errorResponse($e->getMessage());
         }
+    }
+
+    /**
+     * Display the specified resource.
+     */
+    public function show($id)
+    {
+        $start = microtime(true);
+
+        try {
+            // 1. DB Check
+            $data = RajaOngkirCity::select('id', 'name', 'province_id')->where('id', $id)->first();
+
+            if ($data) {
+                $this->logRequest("/v3/destination/city/$id", 'db', 200, true, $start, ['id' => $id]);
+                return $this->successResponse($data);
+            }
+
+            // 2. API Fallback
+            $response = Http::withHeaders(['key' => $this->rajaongkir_key])
+                ->get($this->rajaongkir_url . '/city', ['id' => $id]);
+
+            $apiData = $response->json();
+            $this->logRequest("/v3/destination/city/$id", 'api', $response->status(), $response->successful(), $start, ['id' => $id]);
+
+            if ($response->successful() && isset($apiData['rajaongkir']['results'])) {
+                $item = $apiData['rajaongkir']['results'];
+                $mapped = [
+                    'id' => $item['city_id'],
+                    'name' => $item['type'] . ' ' . $item['city_name'],
+                    'province_id' => $item['province_id']
+                ];
+                return $this->successResponse($mapped);
+            }
+
+            return response()->json($apiData, $response->status());
+        } catch (\Exception $e) {
+            $this->logRequest("/v3/destination/city/$id", 'error', 500, false, $start, ['id' => $id], $e->getMessage());
+            return $this->errorResponse($e->getMessage());
+        }
+    }
+
+    private function logRequest($endpoint, $source, $statusCode, $success, $startTime, $payload, $error = null)
+    {
+        ShippingLog::create([
+            'method' => 'GET',
+            'endpoint' => $endpoint,
+            'source' => $source,
+            'status_code' => $statusCode,
+            'success' => $success,
+            'duration_ms' => round((microtime(true) - $startTime) * 1000),
+            'payload' => $payload,
+            'ip_address' => request()->ip(),
+            'user_agent' => request()->header('User-Agent'),
+            'error_message' => $error
+        ]);
+    }
+
+    private function successResponse($data)
+    {
+        return response()->json([
+            'meta' => ['message' => 'Success Get City', 'code' => 200, 'status' => 'success'],
+            'data' => $data
+        ], 200);
+    }
+
+    private function errorResponse($message)
+    {
+        return response()->json([
+            'meta' => ['message' => 'Internal Server Error', 'code' => 500, 'status' => 'error', 'error' => $message]
+        ], 500);
     }
 }
