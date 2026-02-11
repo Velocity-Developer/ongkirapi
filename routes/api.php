@@ -58,5 +58,7 @@ Route::middleware([ApiKeyMiddleware::class])->group(function () {
 
     Route::post('/v1/cost', [CostController::class, 'index']);
     Route::post('/v2/cost', [V2CostController::class, 'index']);
+    Route::post('/v3/cost', [V2CostController::class, 'index']);
     Route::post('/v1/waybill', [RajaOngkirAwbController::class, 'index']);
+    Route::post('/v3/waybill', [RajaOngkirAwbController::class, 'index']);
 });

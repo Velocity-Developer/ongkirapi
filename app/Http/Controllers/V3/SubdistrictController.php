@@ -83,42 +83,65 @@ class SubdistrictController extends Controller
     }
 
     /**
-     * Display the specified resource.
+     * Display subdistricts by district ID.
      */
     public function show($id)
     {
         $start = microtime(true);
+        $district_id = $id;
 
         try {
             // 1. DB Check
-            $data = RajaongkirSubDistrict::select('id', 'name', 'district_id', 'zip_code')->where('id', $id)->first();
+            $dbData = RajaongkirSubDistrict::select('id', 'name', 'district_id', 'zip_code')
+                ->where('district_id', $district_id)
+                ->get();
 
-            if ($data) {
-                $this->logRequest("/v3/destination/subdistrict/$id", 'db', 200, true, $start, ['id' => $id]);
-                return $this->successResponse($data);
+            if ($dbData->isNotEmpty()) {
+                $this->logRequest("/v3/destination/subdistrict/$district_id", 'db', 200, true, $start, ['district_id' => $district_id]);
+                return response()->json([
+                    'meta' => ['message' => 'Success Get Subdistrict By District ID', 'code' => 200, 'status' => 'success'],
+                    'data' => $dbData
+                ], 200);
             }
 
-            // 2. API Fallback
+            // 2. API Fallback (Warning: RajaOngkir doesn't have a direct "Subdistrict by District" endpoint that returns Kelurahan)
+            // But we follow V2 pattern which tries to fetch something or just returns error/empty if not found.
+            // Wait, V2 SubdistrictController::show($district_id) does:
+            // $response = ...->get(..., ['city' => $district_id]); -> This is weird in V2, it treats district_id as city param?
+            // Actually V2 code: get($this->rajaongkir_url . '/subdistrict', ['city' => $district_id]);
+            // This suggests V2 treats the parameter as a City ID to get Districts (Kecamatan), OR it's a variable naming confusion.
+            // But based on the user's request, they want V3 to match V2 behavior.
+
             $response = Http::withHeaders(['key' => $this->rajaongkir_key])
-                ->get($this->rajaongkir_url . '/subdistrict', ['id' => $id]);
+                ->get($this->rajaongkir_url . '/subdistrict', ['city' => $district_id]);
 
             $apiData = $response->json();
-            $this->logRequest("/v3/destination/subdistrict/$id", 'api', $response->status(), $response->successful(), $start, ['id' => $id]);
+            $this->logRequest("/v3/destination/subdistrict/$district_id", 'api', $response->status(), $response->successful(), $start, ['district_id' => $district_id]);
 
             if ($response->successful() && isset($apiData['rajaongkir']['results'])) {
-                $item = $apiData['rajaongkir']['results'];
-                $mapped = [
-                    'id' => $item['subdistrict_id'],
-                    'name' => $item['subdistrict_name'],
-                    'district_id' => $item['city_id'],
-                    'zip_code' => null
-                ];
-                return $this->successResponse($mapped);
+                $results = $apiData['rajaongkir']['results'];
+                if (isset($results['subdistrict_id'])) {
+                    $results = [$results];
+                }
+
+                $mapped = array_map(function ($item) {
+                    return [
+                        'id' => $item['subdistrict_id'],
+                        'name' => $item['subdistrict_name'],
+                        'district_id' => $item['city_id'],
+                        'zip_code' => null
+                    ];
+                }, $results);
+
+                return response()->json([
+                    'meta' => ['message' => 'Success Get Subdistrict By District ID', 'code' => 200, 'status' => 'success'],
+                    'data' => $mapped
+                ], 200);
             }
 
             return response()->json($apiData, $response->status());
         } catch (\Exception $e) {
-            $this->logRequest("/v3/destination/subdistrict/$id", 'error', 500, false, $start, ['id' => $id], $e->getMessage());
+            $this->logRequest("/v3/destination/subdistrict/$district_id", 'error', 500, false, $start, ['district_id' => $district_id], $e->getMessage());
             return $this->errorResponse($e->getMessage());
         }
     }

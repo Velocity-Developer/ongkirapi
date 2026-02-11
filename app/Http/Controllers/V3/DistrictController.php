@@ -79,41 +79,57 @@ class DistrictController extends Controller
     }
 
     /**
-     * Display the specified resource.
+     * Display districts by city ID.
      */
     public function show($id)
     {
         $start = microtime(true);
+        $city_id = $id;
 
         try {
             // 1. DB Check
-            $data = RajaOngkirDistrict::select('id', 'name', 'city_id')->where('id', $id)->first();
+            $dbData = RajaOngkirDistrict::select('id', 'name', 'city_id')
+                ->where('city_id', $city_id)
+                ->get();
 
-            if ($data) {
-                $this->logRequest("/v3/destination/district/$id", 'db', 200, true, $start, ['id' => $id]);
-                return $this->successResponse($data);
+            if ($dbData->isNotEmpty()) {
+                $this->logRequest("/v3/destination/district/$city_id", 'db', 200, true, $start, ['city_id' => $city_id]);
+                return response()->json([
+                    'meta' => ['message' => 'Success Get District By City ID', 'code' => 200, 'status' => 'success'],
+                    'data' => $dbData
+                ], 200);
             }
 
             // 2. API Fallback
             $response = Http::withHeaders(['key' => $this->rajaongkir_key])
-                ->get($this->rajaongkir_url . '/subdistrict', ['id' => $id]);
+                ->get($this->rajaongkir_url . '/subdistrict', ['city' => $city_id]);
 
             $apiData = $response->json();
-            $this->logRequest("/v3/destination/district/$id", 'api', $response->status(), $response->successful(), $start, ['id' => $id]);
+            $this->logRequest("/v3/destination/district/$city_id", 'api', $response->status(), $response->successful(), $start, ['city_id' => $city_id]);
 
             if ($response->successful() && isset($apiData['rajaongkir']['results'])) {
-                $item = $apiData['rajaongkir']['results'];
-                $mapped = [
-                    'id' => $item['subdistrict_id'],
-                    'name' => $item['subdistrict_name'],
-                    'city_id' => $item['city_id']
-                ];
-                return $this->successResponse($mapped);
+                $results = $apiData['rajaongkir']['results'];
+                if (isset($results['subdistrict_id'])) {
+                    $results = [$results];
+                }
+
+                $mapped = array_map(function ($item) {
+                    return [
+                        'id' => $item['subdistrict_id'],
+                        'name' => $item['subdistrict_name'],
+                        'city_id' => $item['city_id']
+                    ];
+                }, $results);
+
+                return response()->json([
+                    'meta' => ['message' => 'Success Get District By City ID', 'code' => 200, 'status' => 'success'],
+                    'data' => $mapped
+                ], 200);
             }
 
             return response()->json($apiData, $response->status());
         } catch (\Exception $e) {
-            $this->logRequest("/v3/destination/district/$id", 'error', 500, false, $start, ['id' => $id], $e->getMessage());
+            $this->logRequest("/v3/destination/district/$city_id", 'error', 500, false, $start, ['city_id' => $city_id], $e->getMessage());
             return $this->errorResponse($e->getMessage());
         }
     }

@@ -80,41 +80,58 @@ class CityController extends Controller
     }
 
     /**
-     * Display the specified resource.
+     * Display cities by province ID.
      */
     public function show($id)
     {
         $start = microtime(true);
+        $province_id = $id;
 
         try {
             // 1. DB Check
-            $data = RajaOngkirCity::select('id', 'name', 'province_id')->where('id', $id)->first();
+            $dbData = RajaOngkirCity::select('id', 'name', 'province_id')
+                ->where('province_id', $province_id)
+                ->get();
 
-            if ($data) {
-                $this->logRequest("/v3/destination/city/$id", 'db', 200, true, $start, ['id' => $id]);
-                return $this->successResponse($data);
+            if ($dbData->isNotEmpty()) {
+                $this->logRequest("/v3/destination/city/$province_id", 'db', 200, true, $start, ['province_id' => $province_id]);
+                return response()->json([
+                    'meta' => ['message' => 'Success Get City By Province ID', 'code' => 200, 'status' => 'success'],
+                    'data' => $dbData
+                ], 200);
             }
 
             // 2. API Fallback
             $response = Http::withHeaders(['key' => $this->rajaongkir_key])
-                ->get($this->rajaongkir_url . '/city', ['id' => $id]);
+                ->get($this->rajaongkir_url . '/city', ['province' => $province_id]);
 
             $apiData = $response->json();
-            $this->logRequest("/v3/destination/city/$id", 'api', $response->status(), $response->successful(), $start, ['id' => $id]);
+            $this->logRequest("/v3/destination/city/$province_id", 'api', $response->status(), $response->successful(), $start, ['province_id' => $province_id]);
 
             if ($response->successful() && isset($apiData['rajaongkir']['results'])) {
-                $item = $apiData['rajaongkir']['results'];
-                $mapped = [
-                    'id' => $item['city_id'],
-                    'name' => $item['type'] . ' ' . $item['city_name'],
-                    'province_id' => $item['province_id']
-                ];
-                return $this->successResponse($mapped);
+                $results = $apiData['rajaongkir']['results'];
+                // Normalize single/list response (though /city?province=... usually returns list)
+                if (isset($results['city_id'])) {
+                    $results = [$results];
+                }
+
+                $mapped = array_map(function ($item) {
+                    return [
+                        'id' => $item['city_id'],
+                        'name' => $item['type'] . ' ' . $item['city_name'],
+                        'province_id' => $item['province_id']
+                    ];
+                }, $results);
+
+                return response()->json([
+                    'meta' => ['message' => 'Success Get City By Province ID', 'code' => 200, 'status' => 'success'],
+                    'data' => $mapped
+                ], 200);
             }
 
             return response()->json($apiData, $response->status());
         } catch (\Exception $e) {
-            $this->logRequest("/v3/destination/city/$id", 'error', 500, false, $start, ['id' => $id], $e->getMessage());
+            $this->logRequest("/v3/destination/city/$province_id", 'error', 500, false, $start, ['province_id' => $province_id], $e->getMessage());
             return $this->errorResponse($e->getMessage());
         }
     }
