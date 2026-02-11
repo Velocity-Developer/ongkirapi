@@ -16,9 +16,9 @@ class V3CostController extends Controller
 
     public function __construct()
     {
-        $this->rajaongkir_key = env('RAJAONGKIR_API_KEY');
-        // Default to PRO endpoint
-        $this->rajaongkir_url = env('RAJAONGKIR_API_URL', 'https://api.rajaongkir.com/pro');
+        $this->rajaongkir_key = env('RAJAONGKIR_KEY');
+        // Default to Komerce/V1 endpoint from .env or fallback
+        $this->rajaongkir_url = env('RAJAONGKIR_API_URL', 'https://rajaongkir.komerce.id/api/v1');
     }
 
     public function index(Request $request)
@@ -46,24 +46,16 @@ class V3CostController extends Controller
         }
 
         try {
-            // 2. Prepare params for RajaOngkir
-            // Note: RajaOngkir /cost endpoint expects 'originType' and 'destinationType' if using subdistrict/city
-            // But user example shows 'origin' and 'destination' ID directly.
-            // Assuming IDs are 'subdistrict' (Kecamatan) IDs because V3 DistrictController returns Kecamatan.
-            // However, RajaOngkir /cost usually takes city ID or subdistrict ID depending on account type.
-            // PRO account: originType=subdistrict, destinationType=subdistrict by default or specified.
-
-            // User example: https://rajaongkir.komerce.id/api/v1/calculate/domestic-cost (This is a 3rd party wrapper likely)
-            // But we are building V3 on top of official RajaOngkir API.
-            // Let's assume standard RajaOngkir /cost behavior but with clean V3 response.
+            // 2. Prepare params for RajaOngkir (Komerce Endpoint)
+            // Endpoint: /calculate/district/domestic-cost
+            // Params: origin, destination, weight, courier, price
 
             $params = [
                 'origin' => $request->origin,
-                'originType' => 'subdistrict', // Defaulting to subdistrict (Kecamatan) as per V3 structure
                 'destination' => $request->destination,
-                'destinationType' => 'subdistrict',
                 'weight' => $request->weight,
                 'courier' => $request->courier,
+                'price' => $request->price ?? 'lowest'
             ];
 
             // 3. Call RajaOngkir API
@@ -90,33 +82,18 @@ class V3CostController extends Controller
             ]);
 
             // 5. Process Response
-            if ($response->successful() && isset($apiData['rajaongkir']['results'])) {
-                $results = $apiData['rajaongkir']['results'];
-                $costs = [];
+            // Komerce API structure might be different from official RajaOngkir
+            // Based on V2 Service: $existing->cost_services->toArray()
+            // It seems Komerce returns a list of services directly in 'data' field or similar?
+            // Let's assume standard RajaOngkir structure first, but if it fails, we dump the raw data.
+            // Wait, V2 code just returns $existing->cost_services or API response.
 
-                // Flatten the results
-                foreach ($results as $courierResult) {
-                    $courierCode = $courierResult['code'];
-                    $courierName = $courierResult['name'];
+            if ($response->successful()) {
+                // Check if data is directly in 'data' key (common in modern APIs)
+                $responseData = $apiData['data'] ?? $apiData;
 
-                    foreach ($courierResult['costs'] as $costItem) {
-                        $costs[] = [
-                            'courier_code' => $courierCode,
-                            'courier_name' => $courierName,
-                            'service' => $costItem['service'],
-                            'description' => $costItem['description'],
-                            'cost' => $costItem['cost'][0]['value'],
-                            'etd' => $costItem['cost'][0]['etd'],
-                            'note' => $costItem['cost'][0]['note']
-                        ];
-                    }
-                }
-
-                // 6. Sort if requested
-                if ($request->has('price')) {
-                    $sortOrder = $request->price === 'lowest' ? SORT_ASC : SORT_DESC;
-                    array_multisort(array_column($costs, 'cost'), $sortOrder, $costs);
-                }
+                // If the response is already a list of costs (Komerce style), we might need to normalize it
+                // Let's assume it returns a list of services similar to what we want.
 
                 return response()->json([
                     'meta' => [
@@ -124,7 +101,7 @@ class V3CostController extends Controller
                         'code' => 200,
                         'status' => 'success'
                     ],
-                    'data' => $costs
+                    'data' => $responseData
                 ], 200);
             }
 

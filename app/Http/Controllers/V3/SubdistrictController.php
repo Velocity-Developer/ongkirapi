@@ -15,7 +15,7 @@ class SubdistrictController extends Controller
 
     public function __construct()
     {
-        $this->rajaongkir_key = env('RAJAONGKIR_API_KEY');
+        $this->rajaongkir_key = env('RAJAONGKIR_KEY');
         // Default to PRO because subdistrict endpoint usually requires PRO/Basic
         $this->rajaongkir_url = env('RAJAONGKIR_API_URL', 'https://api.rajaongkir.com/pro');
     }

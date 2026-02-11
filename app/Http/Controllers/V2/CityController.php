@@ -16,7 +16,7 @@ class CityController extends Controller
 
     public function __construct()
     {
-        $this->rajaongkir_key = env('RAJAONGKIR_API_KEY');
+        $this->rajaongkir_key = env('RAJAONGKIR_KEY');
         $this->rajaongkir_url = env('RAJAONGKIR_API_URL', 'https://api.rajaongkir.com/starter');
     }
 
@@ -30,17 +30,17 @@ class CityController extends Controller
         try {
             // First, check database - use RajaOngkir table
             $query = RajaOngkirCity::select('id as city_id', 'name as city_name', 'province_id');
-            
+
             if ($request->id) {
                 $query->where('id', $request->id);
             }
-            
+
             if ($request->province) {
                 $query->where('province_id', $request->province);
             }
-            
+
             $dbData = $query->get();
-            
+
             // If data exists in database, return it
             if ($dbData && count($dbData) > 0) {
                 // Log database request
@@ -103,7 +103,6 @@ class CityController extends Controller
             }
 
             return response()->json($data, $status_code);
-
         } catch (\Exception $e) {
             // Log error
             ShippingLog::create([
@@ -141,7 +140,7 @@ class CityController extends Controller
             $dbData = RajaOngkirCity::select('id as city_id', 'name as city_name', 'province_id')
                 ->where('province_id', $province_id)
                 ->get();
-            
+
             // If data exists in database, return it
             if ($dbData && count($dbData) > 0) {
                 // Log database request
@@ -204,7 +203,6 @@ class CityController extends Controller
             }
 
             return response()->json($data, $status_code);
-
         } catch (\Exception $e) {
             // Log error
             ShippingLog::create([
