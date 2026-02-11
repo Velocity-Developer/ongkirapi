@@ -17,7 +17,19 @@ class CityController extends Controller
     {
         $this->rajaongkir_key = env('RAJAONGKIR_API_KEY');
         $this->rajaongkir_url = env('RAJAONGKIR_API_URL', 'https://api.rajaongkir.com/starter');
+    
+    /**
+     * Display the specified resource.
+     *
+     * @param  int  $id
+     * @return \Illuminate\Http\Response
+     */
+    public function show($id)
+    {
+        $request = new Request(['id' => $id]);
+        return $this->index($request);
     }
+}
 
     /**
      * Display a listing of cities - check DB first, fallback to API
@@ -29,27 +41,27 @@ class CityController extends Controller
         try {
             // First, check database - use RajaOngkir table
             $query = RajaOngkirCity::select('id', 'name', 'province_id');
-            
+
             if ($request->id) {
                 $query->where('id', $request->id);
             }
-            
+
             if ($request->province_id) {
                 $query->where('province_id', $request->province_id);
             } elseif ($request->province) {
-                 // Support legacy parameter name if needed, or strictly use clean schema?
-                 // Let's support both for convenience but map to province_id
+                // Support legacy parameter name if needed, or strictly use clean schema?
+                // Let's support both for convenience but map to province_id
                 $query->where('province_id', $request->province);
             }
-            
+
             $dbData = $query->get();
-            
+
             // If data exists in database, return it
             if ($dbData && count($dbData) > 0) {
                 // Log database request
                 ShippingLog::create([
                     'method'        => 'GET',
-                    'endpoint'      => '/v3/city',
+                    'endpoint'      => '/v3/destination/city',
                     'source'        => 'db',
                     'status_code'   => 200,
                     'success'       => true,
@@ -82,7 +94,7 @@ class CityController extends Controller
             // Transform API response to clean schema
             if (isset($data['rajaongkir']['results'])) {
                 $results = $data['rajaongkir']['results'];
-                
+
                 if (isset($results['city_id'])) {
                     // Single result
                     $mapped = [
@@ -93,7 +105,7 @@ class CityController extends Controller
                     $data['rajaongkir']['results'] = $mapped;
                 } else {
                     // List results
-                    $mapped = array_map(function($item) {
+                    $mapped = array_map(function ($item) {
                         return [
                             'id' => $item['city_id'],
                             'name' => $item['city_name'],
@@ -107,7 +119,7 @@ class CityController extends Controller
             // Log API request
             ShippingLog::create([
                 'method'        => 'GET',
-                'endpoint'      => '/v3/city',
+                'endpoint'      => '/v3/destination/city',
                 'source'        => 'api',
                 'status_code'   => $status_code,
                 'success'       => $response->successful(),
@@ -118,12 +130,11 @@ class CityController extends Controller
             ]);
 
             return response()->json($data, $status_code);
-
         } catch (\Exception $e) {
             // Log error
             ShippingLog::create([
                 'method'        => 'GET',
-                'endpoint'      => '/v3/city',
+                'endpoint'      => '/v3/destination/city',
                 'source'        => 'api',
                 'status_code'   => 500,
                 'success'       => false,

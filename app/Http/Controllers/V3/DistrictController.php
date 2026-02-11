@@ -30,25 +30,25 @@ class DistrictController extends Controller
         try {
             // First, check database - use RajaOngkir table
             $query = RajaOngkirDistrict::select('id', 'name', 'city_id');
-            
+
             if ($request->id) {
                 $query->where('id', $request->id);
             }
-            
+
             if ($request->city_id) {
                 $query->where('city_id', $request->city_id);
             } elseif ($request->city) {
                 $query->where('city_id', $request->city);
             }
-            
+
             $dbData = $query->get();
-            
+
             // If data exists in database, return it
             if ($dbData && count($dbData) > 0) {
                 // Log database request
                 ShippingLog::create([
                     'method'        => 'GET',
-                    'endpoint'      => '/v3/district',
+                    'endpoint'      => '/v3/destination/district',
                     'source'        => 'db',
                     'status_code'   => 200,
                     'success'       => true,
@@ -82,7 +82,7 @@ class DistrictController extends Controller
             // Transform API response to clean schema
             if (isset($data['rajaongkir']['results'])) {
                 $results = $data['rajaongkir']['results'];
-                
+
                 if (isset($results['subdistrict_id'])) {
                     // Single result
                     $mapped = [
@@ -93,7 +93,7 @@ class DistrictController extends Controller
                     $data['rajaongkir']['results'] = $mapped;
                 } else {
                     // List results
-                    $mapped = array_map(function($item) {
+                    $mapped = array_map(function ($item) {
                         return [
                             'id' => $item['subdistrict_id'],
                             'name' => $item['subdistrict_name'],
@@ -107,7 +107,7 @@ class DistrictController extends Controller
             // Log API request
             ShippingLog::create([
                 'method'        => 'GET',
-                'endpoint'      => '/v3/district',
+                'endpoint'      => '/v3/destination/district',
                 'source'        => 'api',
                 'status_code'   => $status_code,
                 'success'       => $response->successful(),
@@ -118,12 +118,11 @@ class DistrictController extends Controller
             ]);
 
             return response()->json($data, $status_code);
-
         } catch (\Exception $e) {
             // Log error
             ShippingLog::create([
                 'method'        => 'GET',
-                'endpoint'      => '/v3/district',
+                'endpoint'      => '/v3/destination/district',
                 'source'        => 'api',
                 'status_code'   => 500,
                 'success'       => false,

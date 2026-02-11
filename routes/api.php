@@ -44,9 +44,7 @@ Route::middleware([ApiKeyMiddleware::class])->group(function () {
     Route::apiResources([
         'v2/province'       => V2ProvinceController::class,
         'v2/city'           => V2CityController::class,
-        'v2/destination/city' => V2CityController::class,
         'v2/district'       => V2DistrictController::class,
-        'v2/destination/district' => V2DistrictController::class,
         'v2/subdistrict'    => V2SubdistrictController::class,
     ]);
 

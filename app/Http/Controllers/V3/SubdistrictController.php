@@ -18,23 +18,23 @@ class SubdistrictController extends Controller
 
         try {
             $query = RajaongkirSubDistrict::select('id', 'name', 'district_id', 'zip_code');
-            
+
             if ($request->id) {
                 $query->where('id', $request->id);
             }
-            
+
             if ($request->district_id) {
                 $query->where('district_id', $request->district_id);
             } elseif ($request->district) {
                 $query->where('district_id', $request->district);
             }
-            
+
             $dbData = $query->get();
-            
+
             // Log database request
             ShippingLog::create([
                 'method'        => 'GET',
-                'endpoint'      => '/v3/subdistrict',
+                'endpoint'      => '/v3/destination/subdistrict',
                 'source'        => 'db',
                 'status_code'   => 200,
                 'success'       => true,
@@ -54,12 +54,11 @@ class SubdistrictController extends Controller
             ];
 
             return response()->json($result, 200);
-
         } catch (\Exception $e) {
             // Log error
             ShippingLog::create([
                 'method'        => 'GET',
-                'endpoint'      => '/v3/subdistrict',
+                'endpoint'      => '/v3/destination/subdistrict',
                 'source'        => 'db',
                 'status_code'   => 500,
                 'success'       => false,
