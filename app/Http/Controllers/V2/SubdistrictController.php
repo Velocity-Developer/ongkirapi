@@ -26,10 +26,15 @@ class SubdistrictController extends Controller
     public function index(Request $request)
     {
         $start = microtime(true);
+        $isDestination = $request->is('*destination*');
 
         try {
-            // First, check database
-            $query = Subdistrict::select('subdistrict_id', 'subdistrict_name', 'city_id', 'type', 'city', 'province_id', 'province');
+            // First, check database - use RajaOngkir table
+            if ($isDestination) {
+                $query = RajaOngkirSubDistrict::select('id', 'subdistrict_name', 'city_id', 'type', 'city', 'province_id', 'province');
+            } else {
+                $query = Subdistrict::select('subdistrict_id', 'subdistrict_name', 'city_id', 'type', 'city', 'province_id', 'province');
+            }
 
             if ($request->id) {
                 $query->where('subdistrict_id', $request->id);
@@ -46,7 +51,7 @@ class SubdistrictController extends Controller
                 // Log database request
                 ShippingLog::create([
                     'method'        => 'GET',
-                    'endpoint'      => '/v2/subdistrict',
+                    'endpoint'      => $isDestination ? '/v2/destination/subdistrict' : '/v2/subdistrict',
                     'source'        => 'db',
                     'status_code'   => 200,
                     'success'       => true,
@@ -79,7 +84,7 @@ class SubdistrictController extends Controller
             // Log API request
             ShippingLog::create([
                 'method'        => 'GET',
-                'endpoint'      => '/v2/subdistrict',
+                'endpoint'      => $isDestination ? '/v2/destination/subdistrict' : '/v2/subdistrict',
                 'source'        => 'api',
                 'status_code'   => $status_code,
                 'success'       => $response->successful(),
@@ -144,7 +149,7 @@ class SubdistrictController extends Controller
             // If data exists in database, return it
             if ($dbData && count($dbData) > 0) {
                 // Transform data to standard subdistrict format
-                $transformedData = $dbData->map(function($item) {
+                $transformedData = $dbData->map(function ($item) {
                     return [
                         'subdistrict_id' => $item->subdistrict_id,
                         'subdistrict_name' => $item->subdistrict_name,
