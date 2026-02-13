@@ -18,7 +18,7 @@ class RajaOngkirAwbController extends Controller
     {
         // Ambil data dari request
         $payload = [
-            'awb'               => $request->input('waybill'),
+            'awb'               => $request->input('awb'),
             'courier'           => $request->input('courier'),
             'last_phone_number' => $request->input('last_phone_number'),
             'ip_address'        => $request->ip(),
