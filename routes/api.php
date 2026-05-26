@@ -10,6 +10,7 @@ use App\Http\Controllers\SubdistrictController;
 use App\Http\Controllers\CostController;
 use App\Http\Controllers\RajaOngkirAwbController;
 use App\Http\Controllers\TestController;
+use App\Http\Controllers\ShippingLogController;
 
 // V2 Controllers - Full Relay to RajaOngkir
 use App\Http\Controllers\V2\ProvinceController as V2ProvinceController;
@@ -64,4 +65,7 @@ Route::middleware([ApiKeyMiddleware::class])->group(function () {
     Route::post('/v3/calculate/domestic-cost', [V3CostController::class, 'index']);
     Route::post('/v1/waybill', [RajaOngkirAwbController::class, 'index']);
     Route::post('/v3/waybill', [RajaOngkirAwbController::class, 'index']);
+
+    //Panel    
+    Route::get('/shipping-log', [ShippingLogController::class, 'index']);
 });
