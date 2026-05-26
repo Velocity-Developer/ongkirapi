@@ -19,6 +19,7 @@ class ShippingLogController extends Controller
             'method' => ['nullable', 'string', 'max:20'],
             'endpoint' => ['nullable', 'string', 'max:255'],
             'domain' => ['nullable', 'string', 'max:255'],
+            'search' => ['nullable', 'string', 'max:255'],
             'status_code' => ['nullable', 'integer'],
             'date_from' => ['nullable', 'date'],
             'date_to' => ['nullable', 'date'],
@@ -46,6 +47,10 @@ class ShippingLogController extends Controller
 
         if (isset($validated['domain'])) {
             $query->where('domain', 'like', '%' . $validated['domain'] . '%');
+        }
+
+        if (isset($validated['search'])) {
+            $query->where('user_agent', 'like', '%' . $validated['search'] . '%');
         }
 
         if (isset($validated['status_code'])) {
