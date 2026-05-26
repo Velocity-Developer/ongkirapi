@@ -9,6 +9,7 @@ class ShippingLog extends Model
   protected $fillable = [
     'method',
     'endpoint',
+    'domain',
     'source',
     'status_code',
     'success',

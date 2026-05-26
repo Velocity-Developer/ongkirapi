@@ -18,6 +18,7 @@ class ShippingLogController extends Controller
             'success' => ['nullable', 'boolean'],
             'method' => ['nullable', 'string', 'max:20'],
             'endpoint' => ['nullable', 'string', 'max:255'],
+            'domain' => ['nullable', 'string', 'max:255'],
             'status_code' => ['nullable', 'integer'],
             'date_from' => ['nullable', 'date'],
             'date_to' => ['nullable', 'date'],
@@ -41,6 +42,10 @@ class ShippingLogController extends Controller
 
         if (isset($validated['endpoint'])) {
             $query->where('endpoint', 'like', '%' . $validated['endpoint'] . '%');
+        }
+
+        if (isset($validated['domain'])) {
+            $query->where('domain', 'like', '%' . $validated['domain'] . '%');
         }
 
         if (isset($validated['status_code'])) {
@@ -154,6 +159,7 @@ class ShippingLogController extends Controller
         return [
             'method' => [$required, 'string', 'max:20'],
             'endpoint' => [$required, 'string', 'max:255'],
+            'domain' => ['nullable', 'string', 'max:255'],
             'source' => [$required, Rule::in(['db', 'api'])],
             'status_code' => ['nullable', 'integer'],
             'success' => [$required, 'boolean'],
