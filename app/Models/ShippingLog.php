@@ -6,6 +6,7 @@ use Illuminate\Database\Eloquent\Model;
 
 class ShippingLog extends Model
 {
+
   protected $fillable = [
     'method',
     'endpoint',
@@ -24,4 +25,26 @@ class ShippingLog extends Model
     'success' => 'boolean',
     'payload' => 'array',
   ];
+
+  protected static function booted(): void
+  {
+    static::creating(function (ShippingLog $shippingLog) {
+      if (!$shippingLog->domain && $shippingLog->user_agent) {
+        $shippingLog->domain = self::extractDomainFromUserAgent($shippingLog->user_agent);
+      }
+    });
+  }
+
+  private static function extractDomainFromUserAgent(string $userAgent): ?string
+  {
+    if (preg_match('/https?:\/\/[^\s)]+/i', $userAgent, $matches)) {
+      return parse_url($matches[0], PHP_URL_HOST) ?: null;
+    }
+
+    if (preg_match('/(?:[a-z0-9-]+\.)+[a-z]{2,}/i', $userAgent, $matches)) {
+      return strtolower($matches[0]);
+    }
+
+    return null;
+  }
 }
