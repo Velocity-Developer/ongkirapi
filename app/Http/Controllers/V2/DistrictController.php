@@ -16,7 +16,7 @@ class DistrictController extends Controller
 
     public function __construct()
     {
-        $this->rajaongkir_key = env('RAJAONGKIR_API_KEY');
+        $this->rajaongkir_key = env('RAJAONGKIR_KEY');
         $this->rajaongkir_url = env('RAJAONGKIR_API_URL', 'https://api.rajaongkir.com/pro');
     }
 
@@ -30,21 +30,21 @@ class DistrictController extends Controller
         try {
             // First, check database - use RajaOngkir table
             $query = RajaOngkirDistrict::select('id as district_id', 'name as district_name', 'city_id');
-            
+
             if ($request->id) {
                 $query->where('id', $request->id);
             }
-            
+
             if ($request->city) {
                 $query->where('city_id', $request->city);
             }
-            
+
             $dbData = $query->get();
-            
+
             // If data exists in database, return it as district format
             if ($dbData && count($dbData) > 0) {
                 // Transform to district format
-                $districts = $dbData->map(function($item) {
+                $districts = $dbData->map(function ($item) {
                     return [
                         'district_id' => $item->district_id,
                         'district_name' => $item->district_name,
@@ -55,7 +55,7 @@ class DistrictController extends Controller
                         'province' => $item->province
                     ];
                 });
-                
+
                 // Log database request
                 ShippingLog::create([
                     'method'        => 'GET',
@@ -91,7 +91,7 @@ class DistrictController extends Controller
 
             // Transform the response to match district format if needed
             if (isset($data['rajaongkir']['results']) && is_array($data['rajaongkir']['results'])) {
-                $districts = array_map(function($item) {
+                $districts = array_map(function ($item) {
                     return [
                         'district_id' => $item['subdistrict_id'] ?? $item['id'],
                         'district_name' => $item['subdistrict_name'] ?? $item['name'],
@@ -133,7 +133,6 @@ class DistrictController extends Controller
             }
 
             return response()->json($data, $status_code);
-
         } catch (\Exception $e) {
             // Log error
             ShippingLog::create([
@@ -170,13 +169,13 @@ class DistrictController extends Controller
             // First, check database - use RajaOngkir table
             $query = RajaOngkirDistrict::select('id as district_id', 'name as district_name', 'city_id')
                 ->where('city_id', $city_id);
-            
+
             $dbData = $query->get();
-            
+
             // If data exists in database, return it as district format
             if ($dbData && count($dbData) > 0) {
                 // Transform to district format
-                $districts = $dbData->map(function($item) {
+                $districts = $dbData->map(function ($item) {
                     return [
                         'district_id' => $item->district_id,
                         'district_name' => $item->district_name,
@@ -187,7 +186,7 @@ class DistrictController extends Controller
                         'province' => $item->province
                     ];
                 });
-                
+
                 // Log database request
                 ShippingLog::create([
                     'method'        => 'GET',
@@ -223,7 +222,7 @@ class DistrictController extends Controller
 
             // Transform the response to match district format if needed
             if (isset($data['rajaongkir']['results']) && is_array($data['rajaongkir']['results'])) {
-                $districts = array_map(function($item) {
+                $districts = array_map(function ($item) {
                     return [
                         'district_id' => $item['subdistrict_id'] ?? $item['id'],
                         'district_name' => $item['subdistrict_name'] ?? $item['name'],
@@ -265,7 +264,6 @@ class DistrictController extends Controller
             }
 
             return response()->json($data, $status_code);
-
         } catch (\Exception $e) {
             // Log error
             ShippingLog::create([

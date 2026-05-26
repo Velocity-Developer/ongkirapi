@@ -16,7 +16,7 @@ class ProvinceController extends Controller
 
     public function __construct()
     {
-        $this->rajaongkir_key = env('RAJAONGKIR_API_KEY');
+        $this->rajaongkir_key = env('RAJAONGKIR_KEY');
         $this->rajaongkir_url = env('RAJAONGKIR_API_URL', 'https://api.rajaongkir.com/starter');
     }
 
