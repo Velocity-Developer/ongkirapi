@@ -12,6 +12,12 @@ class Courier extends Model
         'logo',
     ];
 
+    //hidden fields
+    protected $hidden = [
+        'created_at',
+        'updated_at',
+    ];
+
     public function cost_services()
     {
         return $this->hasMany(CostService::class, 'code', 'code');

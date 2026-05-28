@@ -14,6 +14,12 @@ class CourierService extends Model
         'description',
     ];
 
+    //hidden fields
+    protected $hidden = [
+        'created_at',
+        'updated_at',
+    ];
+
     public function courier()
     {
         return $this->belongsTo(Courier::class);
