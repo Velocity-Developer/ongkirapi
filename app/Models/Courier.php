@@ -16,4 +16,9 @@ class Courier extends Model
     {
         return $this->hasMany(CostService::class, 'code', 'code');
     }
+
+    public function courier_services()
+    {
+        return $this->hasMany(CourierService::class);
+    }
 }
