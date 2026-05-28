@@ -94,6 +94,7 @@ class AnalyticController extends Controller
             ],
             'data' => [
                 'period' => $period,
+                'period_options' => $this->shippingLogChartPeriodOptions(),
                 'start_date' => $startDate->toDateString(),
                 'end_date' => $endDate->toDateString(),
                 'items' => $items,
@@ -109,6 +110,24 @@ class AnalyticController extends Controller
             'harian_1_bulan' => 'daily_month',
             default => $period,
         };
+    }
+
+    private function shippingLogChartPeriodOptions(): array
+    {
+        return [
+            [
+                'label' => 'Harian 1 minggu terakhir',
+                'value' => 'daily_week',
+            ],
+            [
+                'label' => 'Bulanan 1 tahun terakhir',
+                'value' => 'monthly_year',
+            ],
+            [
+                'label' => 'Harian 1 bulan terakhir',
+                'value' => 'daily_month',
+            ],
+        ];
     }
 
     private function buildShippingLogChartItems(
