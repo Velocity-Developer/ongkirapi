@@ -13,6 +13,7 @@ use App\Http\Controllers\TestController;
 use App\Http\Controllers\ShippingLogController;
 use App\Http\Controllers\KodePosController;
 use App\Http\Controllers\CourierController;
+use App\Http\Controllers\AnalyticController;
 
 // V2 Controllers - Full Relay to RajaOngkir
 use App\Http\Controllers\V2\ProvinceController as V2ProvinceController;
@@ -72,4 +73,6 @@ Route::middleware([ApiKeyMiddleware::class])->group(function () {
     Route::get('/shipping-log', [ShippingLogController::class, 'index']);
     Route::get('/kodepos-log', [KodePosController::class, 'index']);
     Route::get('/couriers', [CourierController::class, 'index']);
+    Route::get('/analytics', [AnalyticController::class, 'index']);
+    Route::get('/analytic/shipping-log-chart', [AnalyticController::class, 'chart_shippinglog']);
 });
