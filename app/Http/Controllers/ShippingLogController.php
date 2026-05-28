@@ -23,6 +23,8 @@ class ShippingLogController extends Controller
             'status_code' => ['nullable', 'integer'],
             'date_from' => ['nullable', 'date'],
             'date_to' => ['nullable', 'date'],
+            'created_at_start' => ['nullable', 'date'],
+            'created_at_end' => ['nullable', 'date'],
             'sort' => ['nullable', Rule::in(['asc', 'desc'])],
             'per_page' => ['nullable', 'integer', 'min:1', 'max:100'],
         ]);
@@ -57,11 +59,15 @@ class ShippingLogController extends Controller
             $query->where('status_code', $validated['status_code']);
         }
 
-        if (isset($validated['date_from'])) {
+        if (isset($validated['created_at_start'])) {
+            $query->whereDate('created_at', '>=', $validated['created_at_start']);
+        } elseif (isset($validated['date_from'])) {
             $query->whereDate('created_at', '>=', $validated['date_from']);
         }
 
-        if (isset($validated['date_to'])) {
+        if (isset($validated['created_at_end'])) {
+            $query->whereDate('created_at', '<=', $validated['created_at_end']);
+        } elseif (isset($validated['date_to'])) {
             $query->whereDate('created_at', '<=', $validated['date_to']);
         }
 
