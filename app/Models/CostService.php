@@ -20,4 +20,10 @@ class CostService extends Model
     {
         return $this->belongsTo(Cost::class);
     }
+
+    //relasi courier
+    public function courier()
+    {
+        return $this->belongsTo(Courier::class, 'code', 'code');
+    }
 }
