@@ -23,6 +23,8 @@ class AnalyticController extends Controller
             ->orderBy('name')
             ->get(['id', 'name', 'code']);
 
+        $courierServices = CourierService::query()->get(['id', 'name', 'code']);
+
         return response()->json([
             'status' => [
                 'code' => 200,
@@ -32,9 +34,11 @@ class AnalyticController extends Controller
                 'shipping_logs_today' => ShippingLog::whereDate('created_at', today())->count(),
                 'couriers' => [
                     'total' => $couriers->count(),
-                    'services_total' => CourierService::count(),
+                    'services_total' => $courierServices->count(),
                     'items' => $couriers,
                 ],
+                'count_courier' => $couriers->count(),
+                'count_courier_services' => $courierServices->count(),
                 'kodepos_inactive' => KodePos::where('status', 'inactive')->count(),
             ],
         ]);
